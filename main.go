@@ -1,7 +1,12 @@
 package main
 
-import "fmt"
+import (
+	"gorail/db"
+	"gorail/util"
+)
 
 func main() {
-	fmt.Println("Gorail project start!!")
+	db.GetData()
+	util.Load()
+	// user.RunApp()
 }
