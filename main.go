@@ -1,12 +1,9 @@
 package main
 
-import (
-	"gorail/db"
-	"gorail/util"
-)
+import "gorail/user"
 
 func main() {
-	db.GetData()
-	util.Load()
-	// user.RunApp()
+	// db.GetData()
+	// util.Load()
+	user.RunApp()
 }
