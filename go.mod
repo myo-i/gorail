@@ -3,7 +3,6 @@ module gorail
 go 1.20
 
 require (
-	fyne.io/fyne v1.4.3
 	fyne.io/fyne/v2 v2.3.1
 	github.com/mattn/go-sqlite3 v1.14.16
 	github.com/spf13/viper v1.15.0
