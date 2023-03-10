@@ -1,7 +1,6 @@
 package user
 
 import (
-	"fmt"
 	"image/color"
 
 	// バージョンはv2で揃える！！
@@ -32,28 +31,12 @@ func RunApp() {
 	rect.Resize(fyne.NewSize(100, 100))
 	rect.Move(fyne.NewPos(50, 50))
 
-	fmt.Println("2")
-
 	red := color.NRGBA{R: 0xff, G: 0x33, B: 0x33, A: 0xff}
 	rect2 := canvas.NewRectangle(red)
 
 	green := color.NRGBA{R: 0x43, G: 0xff, B: 0x64, A: 0xd9}
 	rect3 := canvas.NewRectangle(green)
 
-	// time.AfterFunc(time.Second*3, func() {
-	// 	rect2.Resize(fyne.NewSize(100, 100))
-	// 	rect2.Move(fyne.NewPos(50, 50))
-	// 	myWindow.Canvas().Refresh(rect2)
-	// 	time.AfterFunc(time.Second*2, func() {
-	// 		rect2.Resize(fyne.NewSize(125, 125))
-	// 		rect2.Move(fyne.NewPos(45, 45))
-	// 		myWindow.Canvas().Refresh(rect2)
-	// 		fmt.Println("3")
-	// 	})
-	// })
-	fmt.Println("4")
-
-	// タブで作ろうとしたやつ
 	window1Day := container.NewGridWithColumns(
 		2,
 		container.NewGridWithColumns(3,
@@ -70,16 +53,6 @@ func RunApp() {
 
 	rect2.Resize(fyne.NewSize(50, 125))
 
-	hour := &canvas.Line{StrokeColor: color.White, StrokeWidth: 5}
-	minute := &canvas.Line{StrokeColor: color.White, StrokeWidth: 3}
-	second := &canvas.Line{StrokeColor: color.White, StrokeWidth: 1}
-
-	lineWhite := canvas.NewLine(color.White)
-	lineWhite.Position1.X = float32(50)
-	lineWhite.Position1.Y = float32(50)
-	lineWhite.Position2.X = float32(50)
-	lineWhite.Position2.Y = float32(50)
-
 	/////////////     やりたいレイアウトはこれ！！！！   /////////////
 	// 後はポジションを動的にする!!!!
 	labelWeek := widget.NewLabel("1Week")
@@ -87,18 +60,44 @@ func RunApp() {
 	labelWeek.Move(fyne.NewPos(30, 30))
 
 	rect4 := canvas.NewRectangle(green)
-	rect4.Resize(fyne.NewSize(20, 20))
-	rect4.Move(fyne.NewPos(100, 100))
+
+	text4 := canvas.NewText("test", green)
+
+	containerBarText := container.NewWithoutLayout(
+		rect4,
+		text4,
+	)
+	containerBarText.Resize(fyne.NewSize(30, 150))
+	rect4.Resize(fyne.NewSize(containerBarText.Size().Width, 80))
+	text4.Resize(fyne.NewSize(containerBarText.Size().Width, 30))
+	containerBarText.Move(fyne.NewPos(100, 100))
+	rect4.Move(fyne.NewPos(containerBarText.Position().X, containerBarText.Size().Height-rect4.Size().Height))
+	text4.Move(fyne.NewPos(containerBarText.Position().X, containerBarText.Size().Height))
+
+	// content2
+	rect5 := canvas.NewRectangle(color.Opaque)
+
+	text5 := canvas.NewText("test", green)
+
+	containerBarText2 := container.NewWithoutLayout(
+		rect5,
+		text5,
+	)
+	containerBarText2.Resize(fyne.NewSize(30, 150))
+	rect5.Resize(fyne.NewSize(containerBarText2.Size().Width, 120))
+	text5.Resize(fyne.NewSize(containerBarText2.Size().Width, 30))
+	containerBarText2.Move(fyne.NewPos(150, 100))
+	rect5.Move(fyne.NewPos(containerBarText2.Position().X, containerBarText2.Size().Height-rect5.Size().Height))
+	text5.Move(fyne.NewPos(containerBarText2.Position().X, containerBarText2.Size().Height))
+
+	// border
 
 	window1Week := container.NewWithoutLayout(
 		// 同じCanvasObjectを複数個入れても同一のものとみなされる
 		labelWeek,
 		labelDay,
-		hour,
-		minute,
-		second,
-		lineWhite,
-		rect4,
+		containerBarText,
+		containerBarText2,
 	)
 	/////////////////////////////////////////////////////////////
 	window1Week.Resize(fyne.NewSize(450, 300))
@@ -114,9 +113,9 @@ func RunApp() {
 	// w.Resize(fyne.NewSize(1000, 1000))
 
 	// w.ShowAndRun()
-	tab.Resize(fyne.NewSize(400, 400))
-	myWindow.SetContent(tab)
+	tab.Resize(fyne.NewSize(500, 500))
 	myWindow.Resize(fyne.NewSize(500, 500))
+	myWindow.SetContent(tab)
 	myWindow.ShowAndRun()
 
 	/////////  ここのコード読む！！！！！！！！！！！！！！
