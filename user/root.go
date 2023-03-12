@@ -1,6 +1,7 @@
 package user
 
 import (
+	"fmt"
 	"image/color"
 
 	// バージョンはv2で揃える！！
@@ -9,6 +10,24 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+)
+
+const (
+	// Color
+	RED = iota
+	GREEN
+	YELLOW
+	WHITE
+
+	// Element Size
+	WINDOW_WIDTH     = 500
+	WINDOW_HEIGHT    = 500
+	TAB_WIDTH        = 500
+	TAB_HEIGHT       = 500
+	CONTAINER_WIDTH  = 30
+	CONTAINER_HEIGHT = 150
+	CONTAINER_POS_Y  = 100
+	TEXT_HEIGHT      = 30
 )
 
 type bar struct {
@@ -27,15 +46,13 @@ func RunApp() {
 	// rect := canvas.NewRectangle(blue)
 	// create1DayGraph(myCanvas)
 
-	rect := canvas.NewRectangle(color.White)
+	rect := canvas.NewRectangle(chooseColor(WHITE))
 	rect.Resize(fyne.NewSize(100, 100))
 	rect.Move(fyne.NewPos(50, 50))
 
-	red := color.NRGBA{R: 0xff, G: 0x33, B: 0x33, A: 0xff}
-	rect2 := canvas.NewRectangle(red)
+	rect2 := canvas.NewRectangle(chooseColor(RED))
 
-	green := color.NRGBA{R: 0x43, G: 0xff, B: 0x64, A: 0xd9}
-	rect3 := canvas.NewRectangle(green)
+	rect3 := canvas.NewRectangle(chooseColor(GREEN))
 
 	window1Day := container.NewGridWithColumns(
 		2,
@@ -53,7 +70,7 @@ func RunApp() {
 
 	rect2.Resize(fyne.NewSize(50, 125))
 
-	window1Week := Democreate1DayGraph()
+	window1Week := Democreate1WeekGraph()
 
 	/////////////     やりたいレイアウトはこれ！！！！   /////////////
 	// 後はポジションを動的にする!!!!
@@ -70,8 +87,8 @@ func RunApp() {
 	// w.Resize(fyne.NewSize(1000, 1000))
 
 	// w.ShowAndRun()
-	tab.Resize(fyne.NewSize(500, 500))
-	myWindow.Resize(fyne.NewSize(500, 500))
+	tab.Resize(fyne.NewSize(TAB_WIDTH, TAB_HEIGHT))
+	myWindow.Resize(fyne.NewSize(WINDOW_WIDTH, WINDOW_WIDTH))
 	myWindow.SetContent(tab)
 	myWindow.ShowAndRun()
 
@@ -114,54 +131,53 @@ func create1DayGraph(c fyne.Canvas) {
 	// c.SetContent(line)
 }
 
-func Democreate1DayGraph() fyne.CanvasObject {
-	green := color.NRGBA{R: 0x43, G: 0xff, B: 0x64, A: 0xd9}
-	/////// content1
-	rect4 := canvas.NewRectangle(green)
+func Democreate1WeekGraph() fyne.CanvasObject {
 
-	text4 := canvas.NewText("test", green)
+	/////// content1
+	rect4 := canvas.NewRectangle(chooseColor(GREEN))
+
+	text4 := canvas.NewText("test", chooseColor(GREEN))
 
 	containerBarText := container.NewWithoutLayout(
 		rect4,
 		text4,
 	)
-	containerBarText.Resize(fyne.NewSize(30, 150))
+	containerBarText.Resize(fyne.NewSize(CONTAINER_WIDTH, CONTAINER_HEIGHT))
 	rect4.Resize(fyne.NewSize(containerBarText.Size().Width, 80))
-	text4.Resize(fyne.NewSize(containerBarText.Size().Width, 30))
-	containerBarText.Move(fyne.NewPos(100, 100))
+	text4.Resize(fyne.NewSize(containerBarText.Size().Width, TEXT_HEIGHT))
+	containerBarText.Move(fyne.NewPos(100, CONTAINER_POS_Y))
 	rect4.Move(fyne.NewPos(containerBarText.Position().X, containerBarText.Size().Height-rect4.Size().Height))
 	text4.Move(fyne.NewPos(containerBarText.Position().X, containerBarText.Size().Height))
 
 	/////// content2
 	rect5 := canvas.NewRectangle(color.Opaque)
 
-	text5 := canvas.NewText("test", green)
+	text5 := canvas.NewText("test", chooseColor(GREEN))
 
 	containerBarText2 := container.NewWithoutLayout(
 		rect5,
 		text5,
 	)
-	containerBarText2.Resize(fyne.NewSize(30, 150))
+	containerBarText2.Resize(fyne.NewSize(CONTAINER_WIDTH, CONTAINER_HEIGHT))
 	rect5.Resize(fyne.NewSize(containerBarText2.Size().Width, 120))
-	text5.Resize(fyne.NewSize(containerBarText2.Size().Width, 30))
-	containerBarText2.Move(fyne.NewPos(150, 100))
+	text5.Resize(fyne.NewSize(containerBarText2.Size().Width, TEXT_HEIGHT))
+	containerBarText2.Move(fyne.NewPos(150, CONTAINER_POS_Y))
 	rect5.Move(fyne.NewPos(containerBarText2.Position().X, containerBarText2.Size().Height-rect5.Size().Height))
 	text5.Move(fyne.NewPos(containerBarText2.Position().X, containerBarText2.Size().Height))
 
 	/////// content3
-	yellow := color.NRGBA{R: 0xf2, G: 0xff, B: 0x00, A: 0xff}
-	rect6 := canvas.NewRectangle(yellow)
+	rect6 := canvas.NewRectangle(chooseColor(YELLOW))
 
-	text6 := canvas.NewText("test", yellow)
+	text6 := canvas.NewText("test", chooseColor(YELLOW))
 
 	containerBarText3 := container.NewWithoutLayout(
 		rect6,
 		text6,
 	)
-	containerBarText3.Resize(fyne.NewSize(30, 150))
+	containerBarText3.Resize(fyne.NewSize(CONTAINER_WIDTH, CONTAINER_HEIGHT))
 	rect6.Resize(fyne.NewSize(containerBarText3.Size().Width, 100))
-	text6.Resize(fyne.NewSize(containerBarText3.Size().Width, 30))
-	containerBarText3.Move(fyne.NewPos(200, 100))
+	text6.Resize(fyne.NewSize(containerBarText3.Size().Width, TEXT_HEIGHT))
+	containerBarText3.Move(fyne.NewPos(200, CONTAINER_POS_Y))
 	rect6.Move(fyne.NewPos(containerBarText3.Position().X, containerBarText3.Size().Height-rect6.Size().Height))
 	text6.Move(fyne.NewPos(containerBarText3.Position().X, containerBarText3.Size().Height))
 
@@ -181,6 +197,23 @@ func Democreate1DayGraph() fyne.CanvasObject {
 
 	return window1Week
 
+}
+
+func chooseColor(colors int) color.Color {
+	switch colors {
+	case 0:
+		// Red
+		return color.NRGBA{R: 0xff, G: 0x33, B: 0x33, A: 0xff}
+	case 1:
+		// Green
+		return color.NRGBA{R: 0x43, G: 0xff, B: 0x64, A: 0xd9}
+	case 2:
+		// Yellow
+		return color.NRGBA{R: 0xf2, G: 0xff, B: 0x00, A: 0xff}
+	case 3:
+		return color.White
+	}
+	return color.White
 }
 
 func create1WeekGraph() fyne.CanvasObject {
