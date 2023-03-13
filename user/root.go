@@ -53,30 +53,11 @@ func RunApp() {
 
 	rect2 := canvas.NewRectangle(chooseColor(RED))
 
-	rect3 := canvas.NewRectangle(chooseColor(GREEN))
-
-	window1Day := container.NewGridWithColumns(
-		2,
-		container.NewGridWithColumns(3,
-			rect,
-			rect2,
-			rect3,
-		),
-		container.NewGridWithColumns(3,
-			rect,
-			rect2,
-			rect3,
-		),
-	)
-
+	// windowやappのサイズが変更されたら動的にサイズを取得する！！
 	rect2.Resize(fyne.NewSize(50, 125))
 
-	window1Week := Democreate1WeekGraph()
-
-	/////////////     やりたいレイアウトはこれ！！！！   /////////////
-	// 後はポジションを動的にする!!!!
-
-	/////////////////////////////////////////////////////////////
+	window1Day := create1DayGraph()
+	window1Week := create1WeekGraph()
 
 	tab := container.NewAppTabs(
 		container.NewTabItem("1Day", window1Day),
@@ -98,53 +79,47 @@ func RunApp() {
 	// https://github.com/fyne-io/calculator/
 }
 
-func setContentToCircle(c fyne.Canvas) {
-	red := color.NRGBA{R: 0xff, G: 0x33, B: 0x33, A: 0xff}
-	circle := canvas.NewCircle(color.White)
-	circle.StrokeWidth = 4
-	circle.StrokeColor = red
-	circle.Resize(fyne.Size{Height: 10, Width: 10})
-	c.SetContent(circle)
-}
-
-func setContentToText(c fyne.Canvas) {
-	green := color.NRGBA{R: 0, G: 180, B: 0, A: 255}
-	text := canvas.NewText("Text", green)
-	text.TextStyle.Bold = true
-	// text.TextSize = 100
-	text.Resize(fyne.NewSize(100, 50))
-	c.SetContent(text)
-}
-
-func create1DayGraph(c fyne.Canvas) {
-	// yellow := color.NRGBA{R: 226, G: 231, B: 17, A: 1}
-	rect := canvas.NewRectangle(color.White)
-	rect.SetMinSize(fyne.NewSize(100, 100))
-	rect.Move(fyne.NewPos(50, 50))
-	c.SetContent(rect)
-
-	// line := canvas.NewLine(color.White)
-	// line.Position1 = fyne.Position{X: 100, Y: 30}
-	// line.Position2 = fyne.Position{X: 300 - 30, Y: 100}
-	// line.Resize(fyne.Size{Height: line.Position2.X, Width: line.Position2.Y})
-	// // line.Move(line.Position())
-	// fmt.Println(line.Position())
-	// c.SetContent(line)
-}
-
-func Democreate1WeekGraph() fyne.CanvasObject {
+func create1DayGraph() fyne.CanvasObject {
 	green := chooseColor(GREEN)
 	yellow := chooseColor(YELLOW)
 	white := chooseColor(WHITE)
 	rightBlue := chooseColor(RIGHTBLUE)
 
-	container1 := createBarChart(green, green, "Youtube", 0, 80)
+	container2 := createBarChart(white, green, "Google", 50, 200)
 
-	container2 := createBarChart(green, white, "Udemy", 50, 120)
+	container3 := createBarChart(white, yellow, "Brave", 100, 150)
 
-	container3 := createBarChart(yellow, yellow, "github", 100, 100)
+	container4 := createBarChart(white, rightBlue, "FireFox", 150, 50)
 
-	container4 := createBarChart(rightBlue, rightBlue, "github", 150, 50)
+	// border
+	labelWeek := widget.NewLabel("1Week")
+	labelDay := widget.NewLabel("1Day")
+	labelWeek.Move(fyne.NewPos(30, 30))
+
+	window1Day := container.NewWithoutLayout(
+		labelWeek,
+		labelDay,
+		container2,
+		container3,
+		container4,
+	)
+
+	return window1Day
+}
+
+func create1WeekGraph() fyne.CanvasObject {
+	green := chooseColor(GREEN)
+	yellow := chooseColor(YELLOW)
+	white := chooseColor(WHITE)
+	rightBlue := chooseColor(RIGHTBLUE)
+
+	container1 := createBarChart(white, green, "Youtube", 0, 80)
+
+	container2 := createBarChart(white, green, "Udemy", 50, 120)
+
+	container3 := createBarChart(white, yellow, "github", 100, 100)
+
+	container4 := createBarChart(white, rightBlue, "github", 150, 50)
 
 	// border
 	labelWeek := widget.NewLabel("1Week")
@@ -152,7 +127,6 @@ func Democreate1WeekGraph() fyne.CanvasObject {
 	labelWeek.Move(fyne.NewPos(30, 30))
 
 	window1Week := container.NewWithoutLayout(
-		// 同じCanvasObjectを複数個入れても同一のものとみなされる
 		labelWeek,
 		labelDay,
 		container1,
@@ -205,12 +179,4 @@ func createBarChart(textColor, rectColor color.Color, textContent string, durati
 	text.Move(fyne.NewPos(containerBarText.Position().X, containerBarText.Size().Height))
 
 	return containerBarText
-}
-
-func create1WeekGraph() fyne.CanvasObject {
-	// DBから一日分を取得
-	line := canvas.NewLine(color.Opaque)
-	line.StrokeWidth = 5
-
-	return line
 }
