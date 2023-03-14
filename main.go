@@ -4,6 +4,6 @@ import "gorail/user"
 
 func main() {
 	// db.GetData()
-	// util.Load()
+	// config.Load()
 	user.RunApp()
 }

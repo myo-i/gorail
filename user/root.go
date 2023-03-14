@@ -8,7 +8,6 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
 )
 
 const (
@@ -27,8 +26,16 @@ const (
 	CONTAINER_WIDTH  = 30
 	CONTAINER_HEIGHT = 150
 	CONTAINER_POS_X  = 100
-	CONTAINER_POS_Y  = 100
+	CONTAINER_POS_Y  = 300
 	TEXT_HEIGHT      = 30
+)
+
+var (
+	green     = chooseColor(GREEN)
+	yellow    = chooseColor(YELLOW)
+	white     = chooseColor(WHITE)
+	rightBlue = chooseColor(RIGHTBLUE)
+	red       = chooseColor(RED)
 )
 
 type bar struct {
@@ -80,38 +87,34 @@ func RunApp() {
 }
 
 func create1DayGraph() fyne.CanvasObject {
-	green := chooseColor(GREEN)
-	yellow := chooseColor(YELLOW)
-	white := chooseColor(WHITE)
-	rightBlue := chooseColor(RIGHTBLUE)
 
-	container2 := createBarChart(white, green, "Google", 50, 200)
+	container1 := createBarChart(white, green, "Google", 0, 200)
 
-	container3 := createBarChart(white, yellow, "Brave", 100, 150)
+	container2 := createBarChart(white, yellow, "Brave", 50, 150)
 
-	container4 := createBarChart(white, rightBlue, "FireFox", 150, 50)
+	container3 := createBarChart(white, rightBlue, "FireFox", 100, 50)
+
+	container4 := createBarChart(white, yellow, "Brave", 150, 150)
+
+	container5 := createBarChart(white, red, "FireFox", 200, 50)
 
 	// border
-	labelWeek := widget.NewLabel("1Week")
-	labelDay := widget.NewLabel("1Day")
-	labelWeek.Move(fyne.NewPos(30, 30))
+	// labelWeek := widget.NewLabel("1Week")
+	// labelDay := widget.NewLabel("1Day")
+	// labelWeek.Move(fyne.NewPos(30, 30))
 
 	window1Day := container.NewWithoutLayout(
-		labelWeek,
-		labelDay,
+		container1,
 		container2,
 		container3,
 		container4,
+		container5,
 	)
 
 	return window1Day
 }
 
 func create1WeekGraph() fyne.CanvasObject {
-	green := chooseColor(GREEN)
-	yellow := chooseColor(YELLOW)
-	white := chooseColor(WHITE)
-	rightBlue := chooseColor(RIGHTBLUE)
 
 	container1 := createBarChart(white, green, "Youtube", 0, 80)
 
@@ -121,18 +124,14 @@ func create1WeekGraph() fyne.CanvasObject {
 
 	container4 := createBarChart(white, rightBlue, "github", 150, 50)
 
-	// border
-	labelWeek := widget.NewLabel("1Week")
-	labelDay := widget.NewLabel("1Day")
-	labelWeek.Move(fyne.NewPos(30, 30))
+	container5 := createBarChart(white, red, "github", 200, 160)
 
 	window1Week := container.NewWithoutLayout(
-		labelWeek,
-		labelDay,
 		container1,
 		container2,
 		container3,
 		container4,
+		container5,
 	)
 
 	return window1Week
