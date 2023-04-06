@@ -25,7 +25,7 @@ type History interface {
 }
 
 // DBからデータを取得
-func GetData() {
+func GetData() []TimeOnSite {
 	// 環境変数取得
 	config, err := config.Load()
 	if err != nil {
@@ -59,10 +59,36 @@ func GetData() {
 		}
 		data = append(data, urls)
 	}
-	for _, row := range data {
-		fmt.Println(row)
-	}
+	// for _, row := range data {
+	// 	fmt.Println(row)
+	// }
+	return data
 
+}
+
+// goroutineを使って並列で処理
+// ホスト名をキーに、visit_durationを足していく（できればソートも）
+func CalcTimeOnSite(datas []TimeOnSite) map[string]int {
+	// スライスとして宣言するかは要検討
+	var hostAndTime = make(map[string]int)
+
+	c := make(chan bool)
+
+	go func() {
+		for i := 0; i < len(datas); i++ {
+			hostAndTime[urlToHostName(datas[i].Url)] += datas[i].VisitDuration
+		}
+		// fmt.Println(hostAndTime)
+		// 何故か↓のチャネルを追記したらhostAndTimeに値が入った
+		c <- true
+	}()
+
+	// 何故かチャネル追加したらhostAndTimeに値が入ったからコード読んでおく
+	fmt.Println(hostAndTime)
+	<-c
+	fmt.Println(hostAndTime)
+
+	return hostAndTime
 }
 
 // 取得した際のタイトルはバラバラなのでURLで判断

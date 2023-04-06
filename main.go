@@ -1,9 +1,15 @@
 package main
 
-import "gorail/user"
+import (
+	"fmt"
+	"gorail/db"
+)
 
 func main() {
-	// db.GetData()
+	data := db.GetData()
+	result := db.CalcTimeOnSite(data)
+	fmt.Println(result)
+
 	// config.Load()
-	user.RunApp()
+	// user.RunApp()
 }
