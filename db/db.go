@@ -6,6 +6,8 @@ import (
 	"gorail/config"
 	"log"
 	"regexp"
+	"sync"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -42,7 +44,7 @@ func GetData() []TimeOnSite {
 	// クエリを実行
 	// query := "SELECT title, url, last_visit_time FROM urls LIMIT 5"
 	// 1ヶ月(30日)は2592000秒
-	query := "SELECT urls.title, urls.url, visits.visit_duration FROM visits LEFT JOIN urls on visits.url = urls.id WHERE urls.last_visit_time >= (strftime('%s', 'now', '-1 days')+11644473600)*1000000 ORDER BY visits.id desc;"
+	query := "SELECT urls.title, urls.url, visits.visit_duration FROM visits LEFT JOIN urls on visits.url = urls.id WHERE urls.last_visit_time >= (strftime('%s', 'now', '-5 days')+11644473600)*1000000 ORDER BY visits.id desc LIMIT 10;"
 
 	// query := "SELECT COUNT(title) FROM urls"
 	rows, err := db.Query(query)
@@ -60,36 +62,62 @@ func GetData() []TimeOnSite {
 		}
 		data = append(data, urls)
 	}
-	// for _, row := range data {
-	// 	fmt.Println(row)
-	// }
+	for _, row := range data {
+		fmt.Println(row)
+	}
 	return data
 
 }
 
 // goroutineを使って並列で処理
 // ホスト名をキーに、visit_durationを足していく（できればソートも）
-func CalcTimeOnSite(datas []TimeOnSite) map[string]int {
+func CalcTimeOnSite(datas []TimeOnSite) sync.Map {
 	// スライスとして宣言するかは要検討
-	var hostAndTime = make(map[string]int)
+	// var hostAndTime = make(map[string]int)
+	var hostAndTime = sync.Map{}
+	var wg sync.WaitGroup
+	// c := make(chan bool)
 
-	c := make(chan bool)
+	// データの個数分goroutineを実行するので、Addにはdatasの要素数を設定
+	// wg.Done()が実行されるとAddが減っていく
+	// var clientMutex sync.Mutex
 
-	go func() {
-		for i := 0; i < len(datas); i++ {
-			hostAndTime[urlToHostName(datas[i].Url)] += datas[i].VisitDuration
-		}
-		// fmt.Println(hostAndTime)
-		// 何故か↓のチャネルを追記したらhostAndTimeに値が入った
-		c <- true
-	}()
+	wg.Add(10)
+	for _, val := range datas {
+		go createTimeOnSiteMap(val, hostAndTime, &wg)
+	}
+
+	// Addが0になるまで待つ
+	wg.Wait()
+	normal("hello")
 
 	// 何故かチャネル追加したらhostAndTimeに値が入ったからコード読んでおく
-	fmt.Println(hostAndTime)
-	<-c
-	fmt.Println(hostAndTime)
+	// fmt.Println(hostAndTime)
+	// <-c
+	// fmt.Println(hostAndTime)
 
 	return hostAndTime
+}
+
+// mutexはコストが高く、十分なスケーラビリティを確保することができないため、Go1.9以降のバージョンでは、sync.Mapという並行安全なマップが追加されました[2]。
+//
+//	func createTimeOnSiteMap(val TimeOnSite, hostAndTime sync.Map, mutex sync.Mutex, wg *sync.WaitGroup) {
+//		mutex.Lock()
+//		hostAndTime[urlToHostName(val.Url)] += val.VisitDuration
+//		defer mutex.Unlock()
+//		fmt.Println(val.Title)
+//		defer wg.Done()
+//		// fmt.Println(hostAndTime)
+//		// 何故か↓のチャネルを追記したらhostAndTimeに値が入った
+//		// c <- true
+//	}
+func createTimeOnSiteMap(val TimeOnSite, hostAndTime sync.Map, wg *sync.WaitGroup) {
+	hostAndTime.Store(val.Url, val.VisitDuration)
+	fmt.Println(val.Title)
+	defer wg.Done()
+	// fmt.Println(hostAndTime)
+	// 何故か↓のチャネルを追記したらhostAndTimeに値が入った
+	// c <- true
 }
 
 // 取得した際のタイトルはバラバラなのでURLで判断
@@ -98,4 +126,11 @@ func CalcTimeOnSite(datas []TimeOnSite) map[string]int {
 func urlToHostName(url string) string {
 	rex := regexp.MustCompile("(http|https)://[\\w\\.-]+/")
 	return rex.FindString(url)
+}
+
+func normal(s string) {
+	for i := 0; i < 5; i++ {
+		time.Sleep(100 * time.Millisecond)
+		fmt.Println(s)
+	}
 }
