@@ -41,7 +41,8 @@ func GetData() []TimeOnSite {
 
 	// クエリを実行
 	// query := "SELECT title, url, last_visit_time FROM urls LIMIT 5"
-	query := "SELECT urls.title, urls.url, visits.visit_duration FROM visits LEFT JOIN urls on visits.url = urls.id ORDER BY visits.id desc LIMIT 10;"
+	// 1ヶ月(30日)は2592000秒
+	query := "SELECT urls.title, urls.url, visits.visit_duration FROM visits LEFT JOIN urls on visits.url = urls.id WHERE urls.last_visit_time >= (strftime('%s', 'now', '-1 days')+11644473600)*1000000 ORDER BY visits.id desc;"
 
 	// query := "SELECT COUNT(title) FROM urls"
 	rows, err := db.Query(query)
