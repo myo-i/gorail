@@ -61,9 +61,9 @@ func GetData() []TimeOnSite {
 		}
 		data = append(data, urls)
 	}
-	for _, row := range data {
-		fmt.Println(row)
-	}
+	// for _, row := range data {
+	// 	fmt.Println(row)
+	// }
 	return data
 
 }
@@ -77,6 +77,7 @@ func CalcTimeOnSite(datas []TimeOnSite) sync.Map {
 	// var clientMutex sync.Mutex
 	wg.Add(10)
 	for _, val := range datas {
+		// バリューが上書きされてしまう
 		go func(val TimeOnSite) {
 			hostAndTime.Store(urlToHostName(val.Url), val.VisitDuration)
 			fmt.Println(urlToHostName(val.Url), val.VisitDuration)
@@ -87,7 +88,7 @@ func CalcTimeOnSite(datas []TimeOnSite) sync.Map {
 	// Addが0になるまで待つ
 	wg.Wait()
 
-	fmt.Println("Hello")
+	// fmt.Println("Hello")
 	hostAndTime.Range(func(key interface{}, value interface{}) bool {
 		fmt.Printf("Key: %v(Type: %T) -> Value: %v(Type: %T)\n", key, key, value, value)
 		return true
