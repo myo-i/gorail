@@ -7,7 +7,6 @@ import (
 	"log"
 	"regexp"
 	"sync"
-	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -69,68 +68,44 @@ func GetData() []TimeOnSite {
 
 }
 
-// goroutineを使って並列で処理
-// ホスト名をキーに、visit_durationを足していく（できればソートも）
 func CalcTimeOnSite(datas []TimeOnSite) sync.Map {
-	// スライスとして宣言するかは要検討
-	// var hostAndTime = make(map[string]int)
 	var hostAndTime = sync.Map{}
 	var wg sync.WaitGroup
-	// c := make(chan bool)
 
 	// データの個数分goroutineを実行するので、Addにはdatasの要素数を設定
 	// wg.Done()が実行されるとAddが減っていく
 	// var clientMutex sync.Mutex
-
 	wg.Add(10)
 	for _, val := range datas {
-		go createTimeOnSiteMap(val, hostAndTime, &wg)
+		go func(val TimeOnSite) {
+			hostAndTime.Store(urlToHostName(val.Url), val.VisitDuration)
+			fmt.Println(urlToHostName(val.Url), val.VisitDuration)
+			defer wg.Done()
+		}(val)
 	}
 
 	// Addが0になるまで待つ
 	wg.Wait()
-	normal("hello")
 
-	// 何故かチャネル追加したらhostAndTimeに値が入ったからコード読んでおく
-	// fmt.Println(hostAndTime)
-	// <-c
-	// fmt.Println(hostAndTime)
+	fmt.Println("Hello")
+	hostAndTime.Range(func(key interface{}, value interface{}) bool {
+		fmt.Printf("Key: %v(Type: %T) -> Value: %v(Type: %T)\n", key, key, value, value)
+		return true
+	})
 
 	return hostAndTime
 }
 
 // mutexはコストが高く、十分なスケーラビリティを確保することができないため、Go1.9以降のバージョンでは、sync.Mapという並行安全なマップが追加されました[2]。
-//
-//	func createTimeOnSiteMap(val TimeOnSite, hostAndTime sync.Map, mutex sync.Mutex, wg *sync.WaitGroup) {
-//		mutex.Lock()
-//		hostAndTime[urlToHostName(val.Url)] += val.VisitDuration
-//		defer mutex.Unlock()
-//		fmt.Println(val.Title)
-//		defer wg.Done()
-//		// fmt.Println(hostAndTime)
-//		// 何故か↓のチャネルを追記したらhostAndTimeに値が入った
-//		// c <- true
-//	}
-func createTimeOnSiteMap(val TimeOnSite, hostAndTime sync.Map, wg *sync.WaitGroup) {
-	hostAndTime.Store(val.Url, val.VisitDuration)
-	fmt.Println(val.Title)
-	defer wg.Done()
-	// fmt.Println(hostAndTime)
-	// 何故か↓のチャネルを追記したらhostAndTimeに値が入った
-	// c <- true
-}
+// func createTimeOnSiteMap(val TimeOnSite, hostAndTime *sync.Map, wg *sync.WaitGroup) {
+// 	hostAndTime.Store(urlToHostName(val.Url), val.VisitDuration)
+// 	defer wg.Done()
+// 	// fmt.Println(hostAndTime)
+// 	// 何故か↓のチャネルを追記したらhostAndTimeに値が入った
+// 	// c <- true
+// }
 
-// 取得した際のタイトルはバラバラなのでURLで判断
-// ホスト名までをキーバリューに格納してvisit_durationを足していく、そして合計を分や時間に直す
-// URLは(http|https)://[\w\.-]+/でホスト名までにしてキーにする
 func urlToHostName(url string) string {
 	rex := regexp.MustCompile("(http|https)://[\\w\\.-]+/")
 	return rex.FindString(url)
-}
-
-func normal(s string) {
-	for i := 0; i < 5; i++ {
-		time.Sleep(100 * time.Millisecond)
-		fmt.Println(s)
-	}
 }
