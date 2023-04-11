@@ -76,13 +76,19 @@ func CalcTimeOnSite(datas []TimeOnSite) sync.Map {
 	// wg.Done()が実行されるとAddが減っていく
 	// var clientMutex sync.Mutex
 	wg.Add(10)
-	for _, val := range datas {
+	for _, data := range datas {
 		// バリューが上書きされてしまう
-		go func(val TimeOnSite) {
-			hostAndTime.Store(urlToHostName(val.Url), val.VisitDuration)
-			fmt.Println(urlToHostName(val.Url), val.VisitDuration)
+		go func(data TimeOnSite) {
+			value, ok := hostAndTime.Load(urlToHostName(data.Url))
+			// バリューが上書きされないように処理
+			if ok {
+				hostAndTime.Store(urlToHostName(data.Url), data.VisitDuration+value.(int))
+			} else {
+				hostAndTime.Store(urlToHostName(data.Url), data.VisitDuration)
+			}
+			fmt.Println(urlToHostName(data.Url), data.VisitDuration)
 			defer wg.Done()
-		}(val)
+		}(data)
 	}
 
 	// Addが0になるまで待つ
