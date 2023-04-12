@@ -6,6 +6,7 @@ import (
 	"gorail/config"
 	"log"
 	"regexp"
+	"sort"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -43,7 +44,7 @@ func GetData() []TimeOnSite {
 	// クエリを実行
 	// query := "SELECT title, url, last_visit_time FROM urls LIMIT 5"
 	// 1ヶ月(30日)は2592000秒
-	query := "SELECT urls.title, urls.url, visits.visit_duration FROM visits LEFT JOIN urls on visits.url = urls.id WHERE urls.last_visit_time >= (strftime('%s', 'now', '-5 days')+11644473600)*1000000 ORDER BY visits.id desc LIMIT 10;"
+	query := "SELECT urls.title, urls.url, visits.visit_duration FROM visits LEFT JOIN urls on visits.url = urls.id WHERE urls.last_visit_time >= (strftime('%s', 'now', '-1 months')+11644473600)*1000000 ORDER BY visits.id desc;"
 
 	// query := "SELECT COUNT(title) FROM urls"
 	rows, err := db.Query(query)
@@ -75,7 +76,7 @@ func CalcTimeOnSite(datas []TimeOnSite) sync.Map {
 	// データの個数分goroutineを実行するので、Addにはdatasの要素数を設定
 	// wg.Done()が実行されるとAddが減っていく
 	// var clientMutex sync.Mutex
-	wg.Add(10)
+	wg.Add(len(datas))
 	for _, data := range datas {
 		// バリューが上書きされてしまう
 		go func(data TimeOnSite) {
@@ -86,7 +87,7 @@ func CalcTimeOnSite(datas []TimeOnSite) sync.Map {
 			} else {
 				hostAndTime.Store(urlToHostName(data.Url), data.VisitDuration)
 			}
-			fmt.Println(urlToHostName(data.Url), data.VisitDuration)
+			// fmt.Println(urlToHostName(data.Url), data.VisitDuration)
 			defer wg.Done()
 		}(data)
 	}
@@ -95,11 +96,28 @@ func CalcTimeOnSite(datas []TimeOnSite) sync.Map {
 	wg.Wait()
 
 	// fmt.Println("Hello")
+	// hostAndTime.Range(func(key interface{}, value interface{}) bool {
+	// 	fmt.Printf("Key: %v(Type: %T) -> Value: %v(Type: %T)\n", key, key, value, value)
+	// 	return true
+	// })
+
+	// mapをソートしたい
+	sortedMap := make(map[string]int)
+	keys := make([]string, 0, len(sortedMap))
 	hostAndTime.Range(func(key interface{}, value interface{}) bool {
-		fmt.Printf("Key: %v(Type: %T) -> Value: %v(Type: %T)\n", key, key, value, value)
+		sortedMap[key.(string)] = value.(int)
+		keys = append(keys, key.(string))
 		return true
 	})
 
+	sort.Slice(keys, func(i, j int) bool {
+		fmt.Println(sortedMap[keys[i]])
+		return sortedMap[keys[i]] < sortedMap[keys[j]]
+	})
+
+	// for k, v := range sortedMap {
+	// 	fmt.Printf("key: %s, value: %d\n", k, v)
+	// }
 	return hostAndTime
 }
 
