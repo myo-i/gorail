@@ -6,7 +6,6 @@ import (
 	"gorail/config"
 	"log"
 	"regexp"
-	"sort"
 	"sync"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -96,24 +95,24 @@ func CalcTimeOnSite(datas []TimeOnSite) sync.Map {
 	wg.Wait()
 
 	// fmt.Println("Hello")
-	// hostAndTime.Range(func(key interface{}, value interface{}) bool {
-	// 	fmt.Printf("Key: %v(Type: %T) -> Value: %v(Type: %T)\n", key, key, value, value)
-	// 	return true
-	// })
-
-	// mapをソートしたい
-	sortedMap := make(map[string]int)
-	keys := make([]string, 0, len(sortedMap))
 	hostAndTime.Range(func(key interface{}, value interface{}) bool {
-		sortedMap[key.(string)] = value.(int)
-		keys = append(keys, key.(string))
+		fmt.Printf("Key: %v(Type: %T) -> Value: %v(Type: %T)\n", key, key, value, value)
 		return true
 	})
 
-	sort.Slice(keys, func(i, j int) bool {
-		fmt.Println(sortedMap[keys[i]])
-		return sortedMap[keys[i]] < sortedMap[keys[j]]
-	})
+	// mapをソートしたい
+	// sortedMap := make(map[string]int)
+	// keys := make([]string, 0, len(sortedMap))
+	// hostAndTime.Range(func(key interface{}, value interface{}) bool {
+	// 	sortedMap[key.(string)] = value.(int)
+	// 	keys = append(keys, key.(string))
+	// 	return true
+	// })
+
+	// sort.Slice(keys, func(i, j int) bool {
+	// 	fmt.Println(sortedMap[keys[i]])
+	// 	return sortedMap[keys[i]] < sortedMap[keys[j]]
+	// })
 
 	// for k, v := range sortedMap {
 	// 	fmt.Printf("key: %s, value: %d\n", k, v)
@@ -133,4 +132,29 @@ func CalcTimeOnSite(datas []TimeOnSite) sync.Map {
 func urlToHostName(url string) string {
 	rex := regexp.MustCompile("(http|https)://[\\w\\.-]+/")
 	return rex.FindString(url)
+}
+
+// Mapの中で値の大きいバリューを持つキーを上位5つ探すメソッド
+func searchTopFive(hostAndTime sync.Map) {
+	topFiveValue := make([]int, 0, 5)
+	topFiveKey := make([]string, 0, 5)
+	hostAndTime.Range(func(key interface{}, value interface{}) bool {
+		// キーからバリューを取り出し、値を比較してスライスに挿入
+		// 先頭が一番大きい値が入る
+		if len(topFiveValue) == 0 {
+			topFiveKey = append(topFiveKey, key.(string))
+			topFiveValue = append(topFiveValue, value.(int))
+		}
+		compareValue()
+		return true
+	})
+}
+
+// スライスの中で値の大きさが何番目かを比較
+func compareValue(topFiveValue []int, currentValue int) {
+	for index, val := range topFiveValue {
+		if val < currentValue {
+			// スライスの切断と結合を行う
+		}
+	}
 }
