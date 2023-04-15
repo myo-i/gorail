@@ -95,10 +95,12 @@ func CalcTimeOnSite(datas []TimeOnSite) sync.Map {
 	wg.Wait()
 
 	// fmt.Println("Hello")
-	hostAndTime.Range(func(key interface{}, value interface{}) bool {
-		fmt.Printf("Key: %v(Type: %T) -> Value: %v(Type: %T)\n", key, key, value, value)
-		return true
-	})
+	// hostAndTime.Range(func(key interface{}, value interface{}) bool {
+	// 	fmt.Printf("Key: %v(Type: %T) -> Value: %v(Type: %T)\n", key, key, value, value)
+	// 	return true
+	// })
+
+	searchTopFive(hostAndTime)
 
 	// mapをソートしたい
 	// sortedMap := make(map[string]int)
@@ -145,16 +147,28 @@ func searchTopFive(hostAndTime sync.Map) {
 			topFiveKey = append(topFiveKey, key.(string))
 			topFiveValue = append(topFiveValue, value.(int))
 		}
-		compareValue()
+		compareValue(&topFiveKey, &topFiveValue, key.(string), value.(int))
 		return true
 	})
+	fmt.Println(topFiveValue)
+	fmt.Println(topFiveKey)
 }
 
 // スライスの中で値の大きさが何番目かを比較
-func compareValue(topFiveValue []int, currentValue int) {
-	for index, val := range topFiveValue {
+func compareValue(topFiveKey *[]string, topFiveValue *[]int, currentKey string, currentValue int) {
+	for index, val := range *topFiveValue {
 		if val < currentValue {
-			// スライスの切断と結合を行う
-		}
+			// ポインタの値だけをコピー
+			var copyTopFiveKey = *topFiveKey
+			var copyTopFiveValue = *topFiveValue
+
+			firstHalfKey := append(copyTopFiveKey[0:index], currentKey)
+			secondHalfKey := copyTopFiveKey[index : len(copyTopFiveKey)-1]
+			*topFiveKey = append(firstHalfKey, secondHalfKey...)
+
+			firstHalfValue := append(copyTopFiveValue[0:index], currentValue)
+			secondHalfValue := copyTopFiveValue[index : len(copyTopFiveValue)-1]
+			*topFiveValue = append(firstHalfValue, secondHalfValue...)
+		} 　
 	}
 }

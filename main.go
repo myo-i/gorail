@@ -8,7 +8,7 @@ import (
 func main() {
 	data := db.GetData()
 	result := db.CalcTimeOnSite(data)
-	fmt.Println(result)
+	fmt.Println(result.Load("s"))
 
 	// config.Load()
 	// user.RunApp()
