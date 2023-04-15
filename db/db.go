@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"gorail/config"
 	"log"
 	"regexp"
@@ -125,6 +126,9 @@ func searchTopFive(hostAndTime sync.Map) {
 	hostAndTime.Range(func(key interface{}, value interface{}) bool {
 		// メソッドにする意味あんまないかも
 		compareValue(&topFiveKey, &topFiveValue, key.(string), value.(int))
+		fmt.Println(topFiveKey)
+		fmt.Println(topFiveValue)
+		fmt.Println("----------------------------------------------------")
 		return true
 	})
 }
@@ -133,24 +137,23 @@ func searchTopFive(hostAndTime sync.Map) {
 func compareValue(topFiveKey *[]string, topFiveValue *[]int, currentKey string, currentValue int) {
 	for index, val := range *topFiveValue {
 		if val < currentValue {
-
 			copyTopFiveKey := make([]string, len(*topFiveKey))
 			copy(copyTopFiveKey, *topFiveKey)
+
+			// halfKey := copyTopFiveKey[:index]という記述にするとcopyTopFiveKeyのアドレスもコピーしてしまうのでcopyで値のみを代入
+			halfKey := make([]string, index+1)
+			copy(halfKey, copyTopFiveKey[:index])
+			halfKey[index] = currentKey
+			*topFiveKey = append(halfKey, copyTopFiveKey[index:len(copyTopFiveKey)-1]...)
 
 			copyTopFiveValue := make([]int, len(*topFiveValue))
 			copy(copyTopFiveValue, *topFiveValue)
 
-			// secondHalfKey := copyTopFiveKey[index:len(copyTopFiveKey)-1]という記述にするとcopyTopFiveKeyのアドレスもコピーしてしまうのでcopyで値のみを代入
-			secondHalfKey := make([]string, len(copyTopFiveKey)-(index+1))
-			copy(secondHalfKey, copyTopFiveKey[index:len(copyTopFiveKey)-1])
-			firstHalfKey := append(copyTopFiveKey[:index], currentKey)
-			*topFiveKey = append(firstHalfKey, secondHalfKey...)
-
-			secondHalfValue := make([]int, len(copyTopFiveValue)-(index+1))
-			copy(secondHalfValue, copyTopFiveValue[index:len(copyTopFiveValue)-1])
-			firstHalfValue := append(copyTopFiveValue[:index], currentValue)
-			*topFiveValue = append(firstHalfValue, secondHalfValue...)
-
+			// halfValue := copyTopFiveValue[:index]という記述にするとcopyTopFiveValueのアドレスもコピーしてしまうのでcopyで値のみを代入
+			halfValue := make([]int, index+1)
+			copy(halfValue, copyTopFiveValue[:index])
+			halfValue[index] = currentValue
+			*topFiveValue = append(halfValue, copyTopFiveValue[index:len(copyTopFiveValue)-1]...)
 			break
 		}
 	}
