@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	"gorail/config"
 	"log"
 	"regexp"
@@ -102,23 +101,6 @@ func CalcTimeOnSite(datas []TimeOnSite) sync.Map {
 
 	searchTopFive(hostAndTime)
 
-	// mapをソートしたい
-	// sortedMap := make(map[string]int)
-	// keys := make([]string, 0, len(sortedMap))
-	// hostAndTime.Range(func(key interface{}, value interface{}) bool {
-	// 	sortedMap[key.(string)] = value.(int)
-	// 	keys = append(keys, key.(string))
-	// 	return true
-	// })
-
-	// sort.Slice(keys, func(i, j int) bool {
-	// 	fmt.Println(sortedMap[keys[i]])
-	// 	return sortedMap[keys[i]] < sortedMap[keys[j]]
-	// })
-
-	// for k, v := range sortedMap {
-	// 	fmt.Printf("key: %s, value: %d\n", k, v)
-	// }
 	return hostAndTime
 }
 
@@ -138,37 +120,38 @@ func urlToHostName(url string) string {
 
 // Mapの中で値の大きいバリューを持つキーを上位5つ探すメソッド
 func searchTopFive(hostAndTime sync.Map) {
-	topFiveValue := make([]int, 0, 5)
-	topFiveKey := make([]string, 0, 5)
+	topFiveValue := make([]int, 5, 5)
+	topFiveKey := make([]string, 5, 5)
 	hostAndTime.Range(func(key interface{}, value interface{}) bool {
-		// キーからバリューを取り出し、値を比較してスライスに挿入
-		// 先頭が一番大きい値が入る
-		if len(topFiveValue) == 0 {
-			topFiveKey = append(topFiveKey, key.(string))
-			topFiveValue = append(topFiveValue, value.(int))
-		}
+		// メソッドにする意味あんまないかも
 		compareValue(&topFiveKey, &topFiveValue, key.(string), value.(int))
 		return true
 	})
-	fmt.Println(topFiveValue)
-	fmt.Println(topFiveKey)
 }
 
 // スライスの中で値の大きさが何番目かを比較
 func compareValue(topFiveKey *[]string, topFiveValue *[]int, currentKey string, currentValue int) {
 	for index, val := range *topFiveValue {
 		if val < currentValue {
-			// ポインタの値だけをコピー
-			var copyTopFiveKey = *topFiveKey
-			var copyTopFiveValue = *topFiveValue
 
-			firstHalfKey := append(copyTopFiveKey[0:index], currentKey)
-			secondHalfKey := copyTopFiveKey[index : len(copyTopFiveKey)-1]
+			copyTopFiveKey := make([]string, len(*topFiveKey))
+			copy(copyTopFiveKey, *topFiveKey)
+
+			copyTopFiveValue := make([]int, len(*topFiveValue))
+			copy(copyTopFiveValue, *topFiveValue)
+
+			// secondHalfKey := copyTopFiveKey[index:len(copyTopFiveKey)-1]という記述にするとcopyTopFiveKeyのアドレスもコピーしてしまうのでcopyで値のみを代入
+			secondHalfKey := make([]string, len(copyTopFiveKey)-(index+1))
+			copy(secondHalfKey, copyTopFiveKey[index:len(copyTopFiveKey)-1])
+			firstHalfKey := append(copyTopFiveKey[:index], currentKey)
 			*topFiveKey = append(firstHalfKey, secondHalfKey...)
 
-			firstHalfValue := append(copyTopFiveValue[0:index], currentValue)
-			secondHalfValue := copyTopFiveValue[index : len(copyTopFiveValue)-1]
+			secondHalfValue := make([]int, len(copyTopFiveValue)-(index+1))
+			copy(secondHalfValue, copyTopFiveValue[index:len(copyTopFiveValue)-1])
+			firstHalfValue := append(copyTopFiveValue[:index], currentValue)
 			*topFiveValue = append(firstHalfValue, secondHalfValue...)
-		} 　
+
+			break
+		}
 	}
 }
