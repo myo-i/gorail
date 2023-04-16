@@ -24,7 +24,7 @@ const (
 	TAB_WIDTH        = 500
 	TAB_HEIGHT       = 500
 	CONTAINER_WIDTH  = 30
-	CONTAINER_HEIGHT = 150
+	CONTAINER_HEIGHT = 300
 	CONTAINER_POS_X  = 100
 	CONTAINER_POS_Y  = 300
 	TEXT_HEIGHT      = 30
@@ -88,15 +88,15 @@ func RunApp() {
 
 func create1DayGraph() fyne.CanvasObject {
 
-	container1 := createBarChart(white, green, "Google", 0, 200)
+	container1 := createBarChart(white, green, "200", "Google", 0, 300)
 
-	container2 := createBarChart(white, yellow, "Brave", 50, 150)
+	container2 := createBarChart(white, yellow, "150", "Brave", 50, 150)
 
-	container3 := createBarChart(white, rightBlue, "FireFox", 100, 50)
+	container3 := createBarChart(white, rightBlue, "50", "FireFox", 100, 50)
 
-	container4 := createBarChart(white, yellow, "Brave", 150, 150)
+	container4 := createBarChart(white, yellow, "150", "Brave", 150, 150)
 
-	container5 := createBarChart(white, red, "FireFox", 200, 50)
+	container5 := createBarChart(white, red, "50", "FireFox", 200, 50)
 
 	// border
 	// labelWeek := widget.NewLabel("1Week")
@@ -116,15 +116,15 @@ func create1DayGraph() fyne.CanvasObject {
 
 func create1WeekGraph() fyne.CanvasObject {
 
-	container1 := createBarChart(white, green, "Youtube", 0, 80)
+	container1 := createBarChart(white, green, "80", "Youtube", 0, 80)
 
-	container2 := createBarChart(white, green, "Udemy", 50, 120)
+	container2 := createBarChart(white, green, "120", "Udemy", 50, 120)
 
-	container3 := createBarChart(white, yellow, "github", 100, 100)
+	container3 := createBarChart(white, yellow, "100", "github", 100, 100)
 
-	container4 := createBarChart(white, rightBlue, "github", 150, 50)
+	container4 := createBarChart(white, rightBlue, "50", "github", 150, 50)
 
-	container5 := createBarChart(white, red, "github", 200, 160)
+	container5 := createBarChart(white, red, "160", "github", 200, 160)
 
 	window1Week := container.NewWithoutLayout(
 		container1,
@@ -159,21 +159,26 @@ func chooseColor(colors int) color.Color {
 }
 
 // 棒グラフと項目名をコンテナとして作成
-func createBarChart(textColor, rectColor color.Color, textContent string, duration, barHeight float32) *fyne.Container {
+func createBarChart(textColor, rectColor color.Color, ontime, textContent string, duration, barHeight float32) *fyne.Container {
+	time := canvas.NewText(ontime+"h", textColor)
+
 	rect := canvas.NewRectangle(rectColor)
 
 	text := canvas.NewText(textContent, textColor)
 
 	containerBarText := container.NewWithoutLayout(
+		time,
 		rect,
 		text,
 	)
 
 	containerBarText.Resize(fyne.NewSize(CONTAINER_WIDTH, CONTAINER_HEIGHT))
+	time.Resize(fyne.NewSize(containerBarText.Size().Width, TEXT_HEIGHT))
 	rect.Resize(fyne.NewSize(containerBarText.Size().Width, barHeight))
 	text.Resize(fyne.NewSize(containerBarText.Size().Width, TEXT_HEIGHT))
 
 	containerBarText.Move(fyne.NewPos(CONTAINER_POS_X+duration, CONTAINER_POS_Y))
+	time.Move(fyne.NewPos(containerBarText.Position().X, containerBarText.Size().Height-(TEXT_HEIGHT+rect.Size().Height)))
 	rect.Move(fyne.NewPos(containerBarText.Position().X, containerBarText.Size().Height-rect.Size().Height))
 	text.Move(fyne.NewPos(containerBarText.Position().X, containerBarText.Size().Height))
 
