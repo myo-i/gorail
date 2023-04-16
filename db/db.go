@@ -25,13 +25,7 @@ type History interface {
 }
 
 // DBからデータを取得
-func GetData() []SiteInfo {
-	// 環境変数取得
-	config, err := config.Load()
-	if err != nil {
-		log.Fatalf("Failed to load env file: %v", err)
-	}
-
+func GetData(config config.Config) []SiteInfo {
 	// DB接続
 	db, err := sql.Open("sqlite3", config.DbPath)
 	if err != nil {
@@ -100,6 +94,8 @@ func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
 	// })
 
 	topFiveKey, topFiveValue := getTopFive(hostAndTime)
+	// fmt.Println(topFiveKey)
+	// fmt.Println(topFiveValue)
 
 	// キーのホスト名をサイト名に変換
 	rex := regexp.MustCompile("([\\w-]+)\\.(com|co|io)")
