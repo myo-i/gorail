@@ -2,7 +2,6 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	"gorail/config"
 	"log"
 	"regexp"
@@ -12,7 +11,7 @@ import (
 )
 
 // DBからデータを取得した際の構造体
-type TimeOnSite struct {
+type SiteInfo struct {
 	Title         string
 	Url           string
 	VisitDuration int
@@ -26,7 +25,7 @@ type History interface {
 }
 
 // DBからデータを取得
-func GetData() []TimeOnSite {
+func GetData() []SiteInfo {
 	// 環境変数取得
 	config, err := config.Load()
 	if err != nil {
@@ -43,23 +42,23 @@ func GetData() []TimeOnSite {
 	// クエリを実行
 	// query := "SELECT title, url, last_visit_time FROM urls LIMIT 5"
 	// 1ヶ月(30日)は2592000秒
-	query := "SELECT urls.title, urls.url, visits.visit_duration FROM visits LEFT JOIN urls on visits.url = urls.id WHERE urls.last_visit_time >= (strftime('%s', 'now', '-1 months')+11644473600)*1000000 ORDER BY visits.id desc;"
+	query := "SELECT urls.title, urls.url, visits.visit_duration FROM visits LEFT JOIN urls on visits.url = urls.id WHERE urls.last_visit_time >= (strftime('%s', 'now', '-1 months')+11644473600)*1000000 ORDER BY urls.last_visit_time ASC;"
 
 	// query := "SELECT COUNT(title) FROM urls"
 	rows, err := db.Query(query)
-	var data []TimeOnSite
+	var data []SiteInfo
 	if err != nil {
 		log.Fatalf("Failed to execute query: %v", err)
 	}
 
 	// データ配列に格納
 	for rows.Next() {
-		var urls TimeOnSite
-		err = rows.Scan(&urls.Title, &urls.Url, &urls.VisitDuration)
+		var info SiteInfo
+		err = rows.Scan(&info.Title, &info.Url, &info.VisitDuration)
 		if err != nil {
 			log.Fatalf("Failed to scan rows: %v", err)
 		}
-		data = append(data, urls)
+		data = append(data, info)
 	}
 	// for _, row := range data {
 	// 	fmt.Println(row)
@@ -68,17 +67,17 @@ func GetData() []TimeOnSite {
 
 }
 
-func CalcTimeOnSite(datas []TimeOnSite) sync.Map {
+func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
 	var hostAndTime = sync.Map{}
 	var wg sync.WaitGroup
 
 	// データの個数分goroutineを実行するので、Addにはdatasの要素数を設定
 	// wg.Done()が実行されるとAddが減っていく
-	// var clientMutex sync.Mutex
 	wg.Add(len(datas))
+	// DBからとってきた情報をkey: value = ホスト名: 滞在時間の合計に変換
 	for _, data := range datas {
 		// バリューが上書きされてしまう
-		go func(data TimeOnSite) {
+		go func(data SiteInfo) {
 			value, ok := hostAndTime.Load(urlToHostName(data.Url))
 			// バリューが上書きされないように処理
 			if ok {
@@ -100,13 +99,13 @@ func CalcTimeOnSite(datas []TimeOnSite) sync.Map {
 	// 	return true
 	// })
 
-	searchTopFive(hostAndTime)
+	topFiveKey, topFiveValue := getTopFive(hostAndTime)
 
-	return hostAndTime
+	return topFiveKey, topFiveValue
 }
 
 // mutexはコストが高く、十分なスケーラビリティを確保することができないため、Go1.9以降のバージョンでは、sync.Mapという並行安全なマップが追加されました[2]。
-// func createTimeOnSiteMap(val TimeOnSite, hostAndTime *sync.Map, wg *sync.WaitGroup) {
+// func createSiteInfoMap(val SiteInfo, hostAndTime *sync.Map, wg *sync.WaitGroup) {
 // 	hostAndTime.Store(urlToHostName(val.Url), val.VisitDuration)
 // 	defer wg.Done()
 // 	// fmt.Println(hostAndTime)
@@ -120,21 +119,22 @@ func urlToHostName(url string) string {
 }
 
 // Mapの中で値の大きいバリューを持つキーを上位5つ探すメソッド
-func searchTopFive(hostAndTime sync.Map) {
-	topFiveValue := make([]int, 5, 5)
+func getTopFive(hostAndTime sync.Map) ([]string, []int) {
 	topFiveKey := make([]string, 5, 5)
+	topFiveValue := make([]int, 5, 5)
 	hostAndTime.Range(func(key interface{}, value interface{}) bool {
 		// メソッドにする意味あんまないかも
-		compareValue(&topFiveKey, &topFiveValue, key.(string), value.(int))
-		fmt.Println(topFiveKey)
-		fmt.Println(topFiveValue)
-		fmt.Println("----------------------------------------------------")
+		storeValueInOrder(&topFiveKey, &topFiveValue, key.(string), value.(int))
+		// fmt.Println(topFiveKey)
+		// fmt.Println(topFiveValue)
+		// fmt.Println("----------------------------------------------------")
 		return true
 	})
+	return topFiveKey, topFiveValue
 }
 
 // スライスの中で値の大きさが何番目かを比較
-func compareValue(topFiveKey *[]string, topFiveValue *[]int, currentKey string, currentValue int) {
+func storeValueInOrder(topFiveKey *[]string, topFiveValue *[]int, currentKey string, currentValue int) {
 	for index, val := range *topFiveValue {
 		if val < currentValue {
 			copyTopFiveKey := make([]string, len(*topFiveKey))
