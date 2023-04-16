@@ -101,6 +101,21 @@ func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
 
 	topFiveKey, topFiveValue := getTopFive(hostAndTime)
 
+	// キーのホスト名をサイト名に変換
+	rex := regexp.MustCompile("([\\w-]+)\\.(com|co|io)")
+	for index, hostname := range topFiveKey {
+		match := rex.FindStringSubmatch(hostname)
+		if match == nil {
+			log.Fatalln("Regex pattern unmatch!!")
+		}
+		topFiveKey[index] = match[1]
+	}
+
+	// バリューのミリセカンドを時間に変換
+	for index, milisecond := range topFiveValue {
+		topFiveValue[index] = milisecond / (1000000 * 3600)
+	}
+
 	return topFiveKey, topFiveValue
 }
 
