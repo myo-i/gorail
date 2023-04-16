@@ -2,6 +2,7 @@ package user
 
 import (
 	"image/color"
+	"strconv"
 
 	// バージョンはv2で揃える！！
 	"fyne.io/fyne/v2"
@@ -24,7 +25,7 @@ const (
 	TAB_WIDTH        = 500
 	TAB_HEIGHT       = 500
 	CONTAINER_WIDTH  = 30
-	CONTAINER_HEIGHT = 150
+	CONTAINER_HEIGHT = 300
 	CONTAINER_POS_X  = 100
 	CONTAINER_POS_Y  = 300
 	TEXT_HEIGHT      = 30
@@ -44,7 +45,7 @@ type bar struct {
 	window fyne.Window
 }
 
-func RunApp() {
+func RunApp(topFiveKey []string, topFiveValue []int) {
 	// アプリ起動
 	myApp := app.New()
 	myWindow := myApp.NewWindow("Canvas")
@@ -63,11 +64,11 @@ func RunApp() {
 	// windowやappのサイズが変更されたら動的にサイズを取得する！！
 	rect2.Resize(fyne.NewSize(50, 125))
 
-	window1Day := create1DayGraph()
+	window1Month := create1MonthGraph(topFiveKey, topFiveValue)
 	window1Week := create1WeekGraph()
 
 	tab := container.NewAppTabs(
-		container.NewTabItem("1Day", window1Day),
+		container.NewTabItem("1Month", window1Month),
 		container.NewTabItem("1Week", window1Week),
 		// container.NewTabItem("1Month", window1Month),
 		// container.NewTabItem("3Month", window3Month),
@@ -86,24 +87,24 @@ func RunApp() {
 	// https://github.com/fyne-io/calculator/
 }
 
-func create1DayGraph() fyne.CanvasObject {
+func create1MonthGraph(topFiveKey []string, topFiveValue []int) fyne.CanvasObject {
 
-	container1 := createBarChart(white, green, "Google", 0, 200)
+	container1 := createBarChart(white, green, strconv.Itoa(topFiveValue[4]), topFiveKey[4], 0, float32(topFiveValue[4]))
 
-	container2 := createBarChart(white, yellow, "Brave", 50, 150)
+	container2 := createBarChart(white, yellow, strconv.Itoa(topFiveValue[3]), topFiveKey[3], 50, float32(topFiveValue[3]))
 
-	container3 := createBarChart(white, rightBlue, "FireFox", 100, 50)
+	container3 := createBarChart(white, rightBlue, strconv.Itoa(topFiveValue[2]), topFiveKey[2], 100, float32(topFiveValue[2]))
 
-	container4 := createBarChart(white, yellow, "Brave", 150, 150)
+	container4 := createBarChart(white, yellow, strconv.Itoa(topFiveValue[1]), topFiveKey[1], 150, float32(topFiveValue[1]))
 
-	container5 := createBarChart(white, red, "FireFox", 200, 50)
+	container5 := createBarChart(white, red, strconv.Itoa(topFiveValue[0]), topFiveKey[0], 200, float32(topFiveValue[0]))
 
 	// border
 	// labelWeek := widget.NewLabel("1Week")
 	// labelDay := widget.NewLabel("1Day")
 	// labelWeek.Move(fyne.NewPos(30, 30))
 
-	window1Day := container.NewWithoutLayout(
+	window1Month := container.NewWithoutLayout(
 		container1,
 		container2,
 		container3,
@@ -111,20 +112,20 @@ func create1DayGraph() fyne.CanvasObject {
 		container5,
 	)
 
-	return window1Day
+	return window1Month
 }
 
 func create1WeekGraph() fyne.CanvasObject {
 
-	container1 := createBarChart(white, green, "Youtube", 0, 80)
+	container1 := createBarChart(white, green, "80", "Youtube", 0, 80)
 
-	container2 := createBarChart(white, green, "Udemy", 50, 120)
+	container2 := createBarChart(white, green, "120", "Udemy", 50, 120)
 
-	container3 := createBarChart(white, yellow, "github", 100, 100)
+	container3 := createBarChart(white, yellow, "100", "github", 100, 100)
 
-	container4 := createBarChart(white, rightBlue, "github", 150, 50)
+	container4 := createBarChart(white, rightBlue, "50", "github", 150, 50)
 
-	container5 := createBarChart(white, red, "github", 200, 160)
+	container5 := createBarChart(white, red, "160", "github", 200, 160)
 
 	window1Week := container.NewWithoutLayout(
 		container1,
@@ -159,21 +160,26 @@ func chooseColor(colors int) color.Color {
 }
 
 // 棒グラフと項目名をコンテナとして作成
-func createBarChart(textColor, rectColor color.Color, textContent string, duration, barHeight float32) *fyne.Container {
+func createBarChart(textColor, rectColor color.Color, ontime, textContent string, duration, barHeight float32) *fyne.Container {
+	time := canvas.NewText(ontime+"h", textColor)
+
 	rect := canvas.NewRectangle(rectColor)
 
 	text := canvas.NewText(textContent, textColor)
 
 	containerBarText := container.NewWithoutLayout(
+		time,
 		rect,
 		text,
 	)
 
 	containerBarText.Resize(fyne.NewSize(CONTAINER_WIDTH, CONTAINER_HEIGHT))
+	time.Resize(fyne.NewSize(containerBarText.Size().Width, TEXT_HEIGHT))
 	rect.Resize(fyne.NewSize(containerBarText.Size().Width, barHeight))
 	text.Resize(fyne.NewSize(containerBarText.Size().Width, TEXT_HEIGHT))
 
 	containerBarText.Move(fyne.NewPos(CONTAINER_POS_X+duration, CONTAINER_POS_Y))
+	time.Move(fyne.NewPos(containerBarText.Position().X, containerBarText.Size().Height-(TEXT_HEIGHT+rect.Size().Height)))
 	rect.Move(fyne.NewPos(containerBarText.Position().X, containerBarText.Size().Height-rect.Size().Height))
 	text.Move(fyne.NewPos(containerBarText.Position().X, containerBarText.Size().Height))
 
