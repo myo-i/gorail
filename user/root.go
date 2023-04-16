@@ -2,6 +2,7 @@ package user
 
 import (
 	"image/color"
+	"strconv"
 
 	// バージョンはv2で揃える！！
 	"fyne.io/fyne/v2"
@@ -44,7 +45,7 @@ type bar struct {
 	window fyne.Window
 }
 
-func RunApp() {
+func RunApp(topFiveKey []string, topFiveValue []int) {
 	// アプリ起動
 	myApp := app.New()
 	myWindow := myApp.NewWindow("Canvas")
@@ -63,7 +64,7 @@ func RunApp() {
 	// windowやappのサイズが変更されたら動的にサイズを取得する！！
 	rect2.Resize(fyne.NewSize(50, 125))
 
-	window1Day := create1DayGraph()
+	window1Day := create1DayGraph(topFiveKey, topFiveValue)
 	window1Week := create1WeekGraph()
 
 	tab := container.NewAppTabs(
@@ -86,17 +87,17 @@ func RunApp() {
 	// https://github.com/fyne-io/calculator/
 }
 
-func create1DayGraph() fyne.CanvasObject {
+func create1DayGraph(topFiveKey []string, topFiveValue []int) fyne.CanvasObject {
 
-	container1 := createBarChart(white, green, "200", "Google", 0, 300)
+	container1 := createBarChart(white, green, strconv.Itoa(topFiveValue[4]), topFiveKey[4], 0, float32(topFiveValue[4]))
 
-	container2 := createBarChart(white, yellow, "150", "Brave", 50, 150)
+	container2 := createBarChart(white, yellow, strconv.Itoa(topFiveValue[3]), topFiveKey[3], 50, float32(topFiveValue[3]))
 
-	container3 := createBarChart(white, rightBlue, "50", "FireFox", 100, 50)
+	container3 := createBarChart(white, rightBlue, strconv.Itoa(topFiveValue[2]), topFiveKey[2], 100, float32(topFiveValue[2]))
 
-	container4 := createBarChart(white, yellow, "150", "Brave", 150, 150)
+	container4 := createBarChart(white, yellow, strconv.Itoa(topFiveValue[1]), topFiveKey[1], 150, float32(topFiveValue[1]))
 
-	container5 := createBarChart(white, red, "50", "FireFox", 200, 50)
+	container5 := createBarChart(white, red, strconv.Itoa(topFiveValue[0]), topFiveKey[0], 200, float32(topFiveValue[0]))
 
 	// border
 	// labelWeek := widget.NewLabel("1Week")
