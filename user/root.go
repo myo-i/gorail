@@ -64,11 +64,11 @@ func RunApp(topFiveKey []string, topFiveValue []int) {
 	// windowやappのサイズが変更されたら動的にサイズを取得する！！
 	rect2.Resize(fyne.NewSize(50, 125))
 
-	window1Day := create1DayGraph(topFiveKey, topFiveValue)
+	window1Month := create1MonthGraph(topFiveKey, topFiveValue)
 	window1Week := create1WeekGraph()
 
 	tab := container.NewAppTabs(
-		container.NewTabItem("1Day", window1Day),
+		container.NewTabItem("1Month", window1Month),
 		container.NewTabItem("1Week", window1Week),
 		// container.NewTabItem("1Month", window1Month),
 		// container.NewTabItem("3Month", window3Month),
@@ -87,7 +87,7 @@ func RunApp(topFiveKey []string, topFiveValue []int) {
 	// https://github.com/fyne-io/calculator/
 }
 
-func create1DayGraph(topFiveKey []string, topFiveValue []int) fyne.CanvasObject {
+func create1MonthGraph(topFiveKey []string, topFiveValue []int) fyne.CanvasObject {
 
 	container1 := createBarChart(white, green, strconv.Itoa(topFiveValue[4]), topFiveKey[4], 0, float32(topFiveValue[4]))
 
@@ -104,7 +104,7 @@ func create1DayGraph(topFiveKey []string, topFiveValue []int) fyne.CanvasObject 
 	// labelDay := widget.NewLabel("1Day")
 	// labelWeek.Move(fyne.NewPos(30, 30))
 
-	window1Day := container.NewWithoutLayout(
+	window1Month := container.NewWithoutLayout(
 		container1,
 		container2,
 		container3,
@@ -112,7 +112,7 @@ func create1DayGraph(topFiveKey []string, topFiveValue []int) fyne.CanvasObject 
 		container5,
 	)
 
-	return window1Day
+	return window1Month
 }
 
 func create1WeekGraph() fyne.CanvasObject {
