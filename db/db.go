@@ -2,6 +2,7 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"gorail/config"
 	"log"
 	"regexp"
@@ -64,25 +65,45 @@ func GetData(config config.Config) []SiteInfo {
 func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
 	var hostAndTime = sync.Map{}
 	var wg sync.WaitGroup
+	var mu sync.Mutex
 
 	// データの個数分goroutineを実行するので、Addにはdatasの要素数を設定
 	// wg.Done()が実行されるとAddが減っていく
-	wg.Add(len(datas))
 	// DBからとってきた情報をkey: value = ホスト名: 滞在時間の合計に変換
+
+	////////////////////////////////////
+	// 1. まずキーに空文字？が入る場合があり、空文字が入るとRegex pattern unmatch!!が発生する
+	// 2. 毎回結果が変わるのは、並列処理を行っている際、変数がキャプチャされる。処理の途中でバリューが変更されると正しい値が格納できない
+	////////////////////////////////////
+	var num int
 	for _, data := range datas {
 		// バリューが上書きされてしまう
+		wg.Add(1)
 		go func(data SiteInfo) {
-			value, ok := hostAndTime.Load(urlToHostName(data.Url))
-			// バリューが上書きされないように処理
-			if ok {
-				hostAndTime.Store(urlToHostName(data.Url), data.VisitDuration+value.(int))
-			} else {
-				hostAndTime.Store(urlToHostName(data.Url), data.VisitDuration)
+			mu.Lock()
+			// 1
+			// value, ok := hostAndTime.Load(urlToHostName(data.Url))
+			// // バリューが上書きされないように処理
+			// if ok {
+			// 	hostAndTime.Store(urlToHostName(data.Url), data.VisitDuration+value.(int))
+			// } else {
+			// 	hostAndTime.Store(urlToHostName(data.Url), data.VisitDuration)
+			// }
+			// 2
+			num += data.VisitDuration
+			hostname := urlToHostName(data.Url)
+			value, loaded := hostAndTime.LoadOrStore(hostname, data.VisitDuration)
+			if loaded {
+				hostAndTime.Store(hostname, data.VisitDuration+value.(int))
 			}
+			// 3
+
 			// fmt.Println(urlToHostName(data.Url), data.VisitDuration)
+			mu.Unlock()
 			defer wg.Done()
 		}(data)
 	}
+	fmt.Println(num)
 
 	// Addが0になるまで待つ
 	wg.Wait()
@@ -98,7 +119,7 @@ func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
 	// fmt.Println(topFiveValue)
 
 	// キーのホスト名をサイト名に変換
-	rex := regexp.MustCompile("([\\w-]+)\\.(com|co|io)")
+	rex := regexp.MustCompile("([\\w-]+)\\.(com|co.jp|io)$")
 	for index, hostname := range topFiveKey {
 		match := rex.FindStringSubmatch(hostname)
 		if match == nil {
@@ -125,14 +146,14 @@ func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
 // }
 
 func urlToHostName(url string) string {
-	rex := regexp.MustCompile("(http|https)://[\\w\\.-]+/")
+	rex := regexp.MustCompile("(http|https)://[\\w\\.-]+")
 	return rex.FindString(url)
 }
 
 // Mapの中で値の大きいバリューを持つキーを上位5つ探すメソッド
 func getTopFive(hostAndTime sync.Map) ([]string, []int) {
-	topFiveKey := make([]string, 5, 5)
-	topFiveValue := make([]int, 5, 5)
+	topFiveKey := make([]string, 10, 10)
+	topFiveValue := make([]int, 10, 10)
 	hostAndTime.Range(func(key interface{}, value interface{}) bool {
 		// メソッドにする意味あんまないかも
 		storeValueInOrder(&topFiveKey, &topFiveValue, key.(string), value.(int))
@@ -165,6 +186,10 @@ func storeValueInOrder(topFiveKey *[]string, topFiveValue *[]int, currentKey str
 			copy(halfValue, copyTopFiveValue[:index])
 			halfValue[index] = currentValue
 			*topFiveValue = append(halfValue, copyTopFiveValue[index:len(copyTopFiveValue)-1]...)
+
+			fmt.Println(currentKey)
+			fmt.Println(len(*topFiveKey))
+			fmt.Println(topFiveKey, topFiveValue)
 			break
 		}
 	}
