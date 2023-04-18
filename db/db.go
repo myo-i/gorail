@@ -84,7 +84,7 @@ func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
 			num += data.VisitDuration
 			hostname := urlToHostName(data.Url)
 			mu.Lock()
-			if value, loaded := hostAndTime.LoadOrStore(hostname, data.VisitDuration); loaded {
+			if value, ok := hostAndTime.LoadOrStore(hostname, data.VisitDuration); ok {
 				hostAndTime.Store(hostname, data.VisitDuration+value.(int))
 			}
 
