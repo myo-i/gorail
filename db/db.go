@@ -80,23 +80,20 @@ func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
 		// バリューが上書きされてしまう
 		wg.Add(1)
 		go func(data SiteInfo) {
-			mu.Lock()
-			// 1
-			// value, ok := hostAndTime.Load(urlToHostName(data.Url))
-			// // バリューが上書きされないように処理
-			// if ok {
-			// 	hostAndTime.Store(urlToHostName(data.Url), data.VisitDuration+value.(int))
-			// } else {
-			// 	hostAndTime.Store(urlToHostName(data.Url), data.VisitDuration)
-			// }
 			// 2
 			num += data.VisitDuration
 			hostname := urlToHostName(data.Url)
-			value, loaded := hostAndTime.LoadOrStore(hostname, data.VisitDuration)
-			if loaded {
+			mu.Lock()
+			if value, loaded := hostAndTime.LoadOrStore(hostname, data.VisitDuration); loaded {
 				hostAndTime.Store(hostname, data.VisitDuration+value.(int))
 			}
-			// 3
+
+			// 3 Mutexで単一のアクセスを許可しているのでMapでもいいかも（getTopFive関連の処理全部書き換えるからめんどくさい）
+			// if val, ok := hostAndTime2[hostname]; ok {
+			// 	hostAndTime2[hostname] = data.VisitDuration + val
+			// } else {
+			// 	hostAndTime2[hostname] = data.VisitDuration
+			// }
 
 			// fmt.Println(urlToHostName(data.Url), data.VisitDuration)
 			mu.Unlock()
