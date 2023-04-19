@@ -7,6 +7,7 @@ import (
 	"log"
 	"regexp"
 	"sync"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -37,7 +38,7 @@ func GetData(config config.Config) []SiteInfo {
 	// クエリを実行
 	// query := "SELECT title, url, last_visit_time FROM urls LIMIT 5"
 	// 1ヶ月(30日)は2592000秒
-	query := "SELECT urls.title, urls.url, visits.visit_duration FROM visits LEFT JOIN urls on visits.url = urls.id WHERE urls.last_visit_time >= (strftime('%s', 'now', '-1 months')+11644473600)*1000000 ORDER BY urls.last_visit_time ASC;"
+	query := "SELECT urls.title, urls.url, visits.visit_duration FROM visits LEFT JOIN urls on visits.url = urls.id WHERE urls.last_visit_time >= (strftime('%s', 'now', '-2 years')+11644473600)*1000000 ORDER BY urls.last_visit_time ASC;"
 
 	// query := "SELECT COUNT(title) FROM urls"
 	rows, err := db.Query(query)
@@ -64,6 +65,7 @@ func GetData(config config.Config) []SiteInfo {
 
 func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
 	var hostAndTime = sync.Map{}
+	var hostAndTime2 = make(map[string]int)
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 
@@ -76,30 +78,34 @@ func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
 	// 2. 毎回結果が変わるのは、並列処理を行っている際、変数がキャプチャされる。処理の途中でバリューが変更されると正しい値が格納できない
 	////////////////////////////////////
 	var num int
+	// 計測開始
+	s := time.Now()
 	for _, data := range datas {
 		// バリューが上書きされてしまう
 		wg.Add(1)
 		go func(data SiteInfo) {
-			// 2
-			num += data.VisitDuration
+			// num += data.VisitDuration
 			hostname := urlToHostName(data.Url)
 			mu.Lock()
-			if value, ok := hostAndTime.LoadOrStore(hostname, data.VisitDuration); ok {
-				hostAndTime.Store(hostname, data.VisitDuration+value.(int))
-			}
+			// 2
+			// if value, ok := hostAndTime.LoadOrStore(hostname, data.VisitDuration); ok {
+			// 	hostAndTime.Store(hostname, data.VisitDuration+value.(int))
+			// }
 
 			// 3 Mutexで単一のアクセスを許可しているのでMapでもいいかも（getTopFive関連の処理全部書き換えるからめんどくさい）
-			// if val, ok := hostAndTime2[hostname]; ok {
-			// 	hostAndTime2[hostname] = data.VisitDuration + val
-			// } else {
-			// 	hostAndTime2[hostname] = data.VisitDuration
-			// }
+			if val, ok := hostAndTime2[hostname]; ok {
+				hostAndTime2[hostname] = data.VisitDuration + val
+			} else {
+				hostAndTime2[hostname] = data.VisitDuration
+			}
 
 			// fmt.Println(urlToHostName(data.Url), data.VisitDuration)
 			mu.Unlock()
 			defer wg.Done()
 		}(data)
 	}
+	// 経過時間を出力
+	fmt.Printf("process time: %s\n", time.Since(s))
 	fmt.Println(num)
 
 	// Addが0になるまで待つ
@@ -111,7 +117,8 @@ func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
 	// 	return true
 	// })
 
-	topFiveKey, topFiveValue := getTopFive(hostAndTime)
+	// topFiveKey, topFiveValue := getTopFive(hostAndTime)
+	topFiveKey, topFiveValue := getTopFive(hostAndTime2)
 	// fmt.Println(topFiveKey)
 	// fmt.Println(topFiveValue)
 
@@ -148,17 +155,26 @@ func urlToHostName(url string) string {
 }
 
 // Mapの中で値の大きいバリューを持つキーを上位5つ探すメソッド
-func getTopFive(hostAndTime sync.Map) ([]string, []int) {
+// func getTopFive(hostAndTime sync.Map) ([]string, []int) {
+// 	topFiveKey := make([]string, 10, 10)
+// 	topFiveValue := make([]int, 10, 10)
+// 	hostAndTime.Range(func(key interface{}, value interface{}) bool {
+// 		// メソッドにする意味あんまないかも
+// 		storeValueInOrder(&topFiveKey, &topFiveValue, key.(string), value.(int))
+// 		// fmt.Println(topFiveKey)
+// 		// fmt.Println(topFiveValue)
+// 		// fmt.Println("----------------------------------------------------")
+// 		return true
+// 	})
+// 	return topFiveKey, topFiveValue
+// }
+
+func getTopFive(hostAndTime map[string]int) ([]string, []int) {
 	topFiveKey := make([]string, 10, 10)
 	topFiveValue := make([]int, 10, 10)
-	hostAndTime.Range(func(key interface{}, value interface{}) bool {
-		// メソッドにする意味あんまないかも
-		storeValueInOrder(&topFiveKey, &topFiveValue, key.(string), value.(int))
-		// fmt.Println(topFiveKey)
-		// fmt.Println(topFiveValue)
-		// fmt.Println("----------------------------------------------------")
-		return true
-	})
+	for key, val := range hostAndTime {
+		storeValueInOrder(&topFiveKey, &topFiveValue, key, val)
+	}
 	return topFiveKey, topFiveValue
 }
 
@@ -184,10 +200,37 @@ func storeValueInOrder(topFiveKey *[]string, topFiveValue *[]int, currentKey str
 			halfValue[index] = currentValue
 			*topFiveValue = append(halfValue, copyTopFiveValue[index:len(copyTopFiveValue)-1]...)
 
-			fmt.Println(currentKey)
-			fmt.Println(len(*topFiveKey))
-			fmt.Println(topFiveKey, topFiveValue)
+			// fmt.Println(currentKey)
+			// fmt.Println(len(*topFiveKey))
+			// fmt.Println(topFiveKey, topFiveValue)
 			break
 		}
 	}
 }
+
+// 計測開始
+s := time.Now()
+for _, data := range datas {
+	wg.Add(1)
+	go func(data SiteInfo) {
+		hostname := urlToHostName(data.Url)
+		mu.Lock()
+		// ここからsync.Map
+		if value, ok := hostAndTime.LoadOrStore(hostname, data.VisitDuration); ok {
+			hostAndTime.Store(hostname, data.VisitDuration+value.(int))
+		}
+		// ここまでsync.Map
+
+		//  ここからmap
+		if val, ok := hostAndTime2[hostname]; ok {
+			hostAndTime2[hostname] = data.VisitDuration + val
+		} else {
+			hostAndTime2[hostname] = data.VisitDuration
+		}
+		//  ここまでmap
+		mu.Unlock()
+		defer wg.Done()
+	}(data)
+}
+// 経過時間を出力
+fmt.Printf("process time: %s\n", time.Since(s))
