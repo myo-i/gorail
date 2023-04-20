@@ -19,9 +19,6 @@ type SiteInfo struct {
 	VisitDuration int
 }
 
-// とりあえず3か月分くらいのデータを（できれば滞在時間が長い順で）取得する
-// 取得したデータを1日、1週間、1か月とかでさらに範囲を絞って使う
-
 type History interface {
 	GetHistory()
 }
@@ -36,11 +33,8 @@ func GetData(config config.Config) []SiteInfo {
 	defer db.Close()
 
 	// クエリを実行
-	// query := "SELECT title, url, last_visit_time FROM urls LIMIT 5"
-	// 1ヶ月(30日)は2592000秒
-	query := "SELECT urls.title, urls.url, visits.visit_duration FROM visits LEFT JOIN urls on visits.url = urls.id WHERE urls.last_visit_time >= (strftime('%s', 'now', '-2 years')+11644473600)*1000000 ORDER BY urls.last_visit_time ASC;"
+	query := "SELECT urls.title, urls.url, visits.visit_duration FROM visits LEFT JOIN urls on visits.url = urls.id WHERE urls.last_visit_time >= (strftime('%s', 'now', '-6 months')+11644473600)*1000000 ORDER BY urls.last_visit_time ASC;"
 
-	// query := "SELECT COUNT(title) FROM urls"
 	rows, err := db.Query(query)
 	var data []SiteInfo
 	if err != nil {
@@ -64,13 +58,9 @@ func GetData(config config.Config) []SiteInfo {
 }
 
 func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
-	var hostAndTime2 = make(map[string]int)
+	var hostAndTime = make(map[string]int)
 	var wg sync.WaitGroup
 	var mu sync.Mutex
-
-	// データの個数分goroutineを実行するので、Addにはdatasの要素数を設定
-	// wg.Done()が実行されるとAddが減っていく
-	// DBからとってきた情報をkey: value = ホスト名: 滞在時間の合計に変換
 
 	////////////////////////////////////
 	// 1. まずキーに空文字？が入る場合があり、空文字が入るとRegex pattern unmatch!!が発生する
@@ -87,13 +77,12 @@ func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
 			hostname := urlToHostName(data.Url)
 			mu.Lock()
 
-			if val, ok := hostAndTime2[hostname]; ok {
-				hostAndTime2[hostname] = data.VisitDuration + val
+			if val, ok := hostAndTime[hostname]; ok {
+				hostAndTime[hostname] = data.VisitDuration + val
 			} else {
-				hostAndTime2[hostname] = data.VisitDuration
+				hostAndTime[hostname] = data.VisitDuration
 			}
 
-			// fmt.Println(urlToHostName(data.Url), data.VisitDuration)
 			mu.Unlock()
 			defer wg.Done()
 		}(data)
@@ -105,16 +94,7 @@ func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
 	// Addが0になるまで待つ
 	wg.Wait()
 
-	// fmt.Println("Hello")
-	// hostAndTime.Range(func(key interface{}, value interface{}) bool {
-	// 	fmt.Printf("Key: %v(Type: %T) -> Value: %v(Type: %T)\n", key, key, value, value)
-	// 	return true
-	// })
-
-	// topFiveKey, topFiveValue := getTopFive(hostAndTime)
-	topFiveKey, topFiveValue := getTopFive(hostAndTime2)
-	// fmt.Println(topFiveKey)
-	// fmt.Println(topFiveValue)
+	topFiveKey, topFiveValue := getTopFive(hostAndTime)
 
 	// キーのホスト名をサイト名に変換
 	rex := regexp.MustCompile("([\\w-]+)\\.(com|co.jp|io)$")
@@ -135,13 +115,6 @@ func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
 }
 
 // mutexはコストが高く、十分なスケーラビリティを確保することができないため、Go1.9以降のバージョンでは、sync.Mapという並行安全なマップが追加されました[2]。
-// func createSiteInfoMap(val SiteInfo, hostAndTime *sync.Map, wg *sync.WaitGroup) {
-// 	hostAndTime.Store(urlToHostName(val.Url), val.VisitDuration)
-// 	defer wg.Done()
-// 	// fmt.Println(hostAndTime)
-// 	// 何故か↓のチャネルを追記したらhostAndTimeに値が入った
-// 	// c <- true
-// }
 
 func urlToHostName(url string) string {
 	rex := regexp.MustCompile("(http|https)://[\\w\\.-]+")
@@ -165,7 +138,6 @@ func storeValueInOrder(topFiveKey *[]string, topFiveValue *[]int, currentKey str
 			copyTopFiveKey := make([]string, len(*topFiveKey))
 			copy(copyTopFiveKey, *topFiveKey)
 
-			// halfKey := copyTopFiveKey[:index]という記述にするとcopyTopFiveKeyのアドレスもコピーしてしまうのでcopyで値のみを代入
 			halfKey := make([]string, index+1)
 			copy(halfKey, copyTopFiveKey[:index])
 			halfKey[index] = currentKey
@@ -174,15 +146,11 @@ func storeValueInOrder(topFiveKey *[]string, topFiveValue *[]int, currentKey str
 			copyTopFiveValue := make([]int, len(*topFiveValue))
 			copy(copyTopFiveValue, *topFiveValue)
 
-			// halfValue := copyTopFiveValue[:index]という記述にするとcopyTopFiveValueのアドレスもコピーしてしまうのでcopyで値のみを代入
 			halfValue := make([]int, index+1)
 			copy(halfValue, copyTopFiveValue[:index])
 			halfValue[index] = currentValue
 			*topFiveValue = append(halfValue, copyTopFiveValue[index:len(copyTopFiveValue)-1]...)
 
-			// fmt.Println(currentKey)
-			// fmt.Println(len(*topFiveKey))
-			// fmt.Println(topFiveKey, topFiveValue)
 			break
 		}
 	}
