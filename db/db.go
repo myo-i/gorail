@@ -2,12 +2,10 @@ package db
 
 import (
 	"database/sql"
-	"fmt"
 	"gorail/config"
 	"log"
 	"regexp"
 	"sync"
-	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -33,7 +31,7 @@ func GetData(config config.Config) []SiteInfo {
 	defer db.Close()
 
 	// クエリを実行
-	query := "SELECT urls.title, urls.url, visits.visit_duration FROM visits LEFT JOIN urls on visits.url = urls.id WHERE urls.last_visit_time >= (strftime('%s', 'now', '-6 months')+11644473600)*1000000 ORDER BY urls.last_visit_time ASC;"
+	query := "SELECT urls.title, urls.url, visits.visit_duration FROM visits LEFT JOIN urls on visits.url = urls.id WHERE urls.last_visit_time >= (strftime('%s', 'now', '-2 months')+11644473600)*1000000 ORDER BY urls.last_visit_time ASC;"
 
 	rows, err := db.Query(query)
 	var data []SiteInfo
@@ -66,9 +64,6 @@ func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
 	// 1. まずキーに空文字？が入る場合があり、空文字が入るとRegex pattern unmatch!!が発生する
 	// 2. 毎回結果が変わるのは、並列処理を行っている際、変数がキャプチャされる。処理の途中でバリューが変更されると正しい値が格納できない
 	////////////////////////////////////
-	var num int
-	// 計測開始
-	s := time.Now()
 	for _, data := range datas {
 		// バリューが上書きされてしまう
 		wg.Add(1)
@@ -87,9 +82,6 @@ func GetLengthOfStay(datas []SiteInfo) ([]string, []int) {
 			defer wg.Done()
 		}(data)
 	}
-	// 経過時間を出力
-	fmt.Printf("process time: %s\n", time.Since(s))
-	fmt.Println(num)
 
 	// Addが0になるまで待つ
 	wg.Wait()
