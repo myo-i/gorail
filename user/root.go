@@ -14,9 +14,15 @@ import (
 const (
 	// Color
 	RED = iota
-	GREEN
+	ORANGERED
+	ORANGE
 	YELLOW
-	RIGHTBLUE
+	LIME
+	SPRINGGREEN
+	AQUA
+	DODGERBLUE
+	BLUE
+	LIGHTSTEELBLUE
 	WHITE
 
 	// Element Size
@@ -32,11 +38,17 @@ const (
 )
 
 var (
-	green     = chooseColor(GREEN)
-	yellow    = chooseColor(YELLOW)
-	white     = chooseColor(WHITE)
-	rightBlue = chooseColor(RIGHTBLUE)
-	red       = chooseColor(RED)
+	red            = chooseColor(RED)
+	orangered      = chooseColor(ORANGERED)
+	orange         = chooseColor(ORANGE)
+	yellow         = chooseColor(YELLOW)
+	lime           = chooseColor(LIME)
+	springgreen    = chooseColor(SPRINGGREEN)
+	aqua           = chooseColor(AQUA)
+	dodgerblue     = chooseColor(DODGERBLUE)
+	blue           = chooseColor(BLUE)
+	lightsteelblue = chooseColor(LIGHTSTEELBLUE)
+	white          = chooseColor(WHITE)
 )
 
 type bar struct {
@@ -45,15 +57,10 @@ type bar struct {
 	window fyne.Window
 }
 
-func RunApp(topFiveKey []string, topFiveValue []int) {
+func RunApp(topTenKey []string, topTenValue []int) {
 	// アプリ起動
 	myApp := app.New()
 	myWindow := myApp.NewWindow("Canvas")
-	// myCanvas := myWindow.Canvas()
-
-	// blue := color.NRGBA{R: 0, G: 0, B: 180, A: 255}
-	// rect := canvas.NewRectangle(blue)
-	// create1DayGraph(myCanvas)
 
 	rect := canvas.NewRectangle(chooseColor(WHITE))
 	rect.Resize(fyne.NewSize(100, 100))
@@ -61,10 +68,9 @@ func RunApp(topFiveKey []string, topFiveValue []int) {
 
 	rect2 := canvas.NewRectangle(chooseColor(RED))
 
-	// windowやappのサイズが変更されたら動的にサイズを取得する！！
 	rect2.Resize(fyne.NewSize(50, 125))
 
-	window1Month := create1MonthGraph(topFiveKey, topFiveValue)
+	window1Month := create1MonthGraph(topTenKey, topTenValue)
 	window1Week := create1WeekGraph()
 
 	tab := container.NewAppTabs(
@@ -74,9 +80,6 @@ func RunApp(topFiveKey []string, topFiveValue []int) {
 		// container.NewTabItem("3Month", window3Month),
 	)
 
-	// w.Resize(fyne.NewSize(1000, 1000))
-
-	// w.ShowAndRun()
 	tab.Resize(fyne.NewSize(TAB_WIDTH, TAB_HEIGHT))
 	myWindow.Resize(fyne.NewSize(WINDOW_WIDTH, WINDOW_WIDTH))
 	myWindow.SetContent(tab)
@@ -87,22 +90,18 @@ func RunApp(topFiveKey []string, topFiveValue []int) {
 	// https://github.com/fyne-io/calculator/
 }
 
-func create1MonthGraph(topFiveKey []string, topFiveValue []int) fyne.CanvasObject {
+func create1MonthGraph(topTenKey []string, topTenValue []int) fyne.CanvasObject {
 
-	container1 := createBarChart(white, green, strconv.Itoa(topFiveValue[4]), topFiveKey[4], 0, float32(topFiveValue[4]))
-
-	container2 := createBarChart(white, yellow, strconv.Itoa(topFiveValue[3]), topFiveKey[3], 50, float32(topFiveValue[3]))
-
-	container3 := createBarChart(white, rightBlue, strconv.Itoa(topFiveValue[2]), topFiveKey[2], 100, float32(topFiveValue[2]))
-
-	container4 := createBarChart(white, yellow, strconv.Itoa(topFiveValue[1]), topFiveKey[1], 150, float32(topFiveValue[1]))
-
-	container5 := createBarChart(white, red, strconv.Itoa(topFiveValue[0]), topFiveKey[0], 200, float32(topFiveValue[0]))
-
-	// border
-	// labelWeek := widget.NewLabel("1Week")
-	// labelDay := widget.NewLabel("1Day")
-	// labelWeek.Move(fyne.NewPos(30, 30))
+	container1 := createBarChart(white, lightsteelblue, strconv.Itoa(topTenValue[9]), topTenKey[9], 0, float32(topTenValue[9]))
+	container2 := createBarChart(white, blue, strconv.Itoa(topTenValue[8]), topTenKey[8], 50, float32(topTenValue[8]))
+	container3 := createBarChart(white, dodgerblue, strconv.Itoa(topTenValue[7]), topTenKey[7], 100, float32(topTenValue[7]))
+	container4 := createBarChart(white, aqua, strconv.Itoa(topTenValue[6]), topTenKey[6], 150, float32(topTenValue[6]))
+	container5 := createBarChart(white, springgreen, strconv.Itoa(topTenValue[5]), topTenKey[5], 200, float32(topTenValue[5]))
+	container6 := createBarChart(white, lime, strconv.Itoa(topTenValue[4]), topTenKey[4], 250, float32(topTenValue[4]))
+	container7 := createBarChart(white, yellow, strconv.Itoa(topTenValue[3]), topTenKey[3], 300, float32(topTenValue[3]))
+	container8 := createBarChart(white, orange, strconv.Itoa(topTenValue[2]), topTenKey[2], 350, float32(topTenValue[2]))
+	container9 := createBarChart(white, orangered, strconv.Itoa(topTenValue[1]), topTenKey[1], 400, float32(topTenValue[1]))
+	container10 := createBarChart(white, red, strconv.Itoa(topTenValue[0]), topTenKey[0], 450, float32(topTenValue[0]))
 
 	window1Month := container.NewWithoutLayout(
 		container1,
@@ -110,6 +109,11 @@ func create1MonthGraph(topFiveKey []string, topFiveValue []int) fyne.CanvasObjec
 		container3,
 		container4,
 		container5,
+		container6,
+		container7,
+		container8,
+		container9,
+		container10,
 	)
 
 	return window1Month
@@ -117,13 +121,13 @@ func create1MonthGraph(topFiveKey []string, topFiveValue []int) fyne.CanvasObjec
 
 func create1WeekGraph() fyne.CanvasObject {
 
-	container1 := createBarChart(white, green, "80", "Youtube", 0, 80)
+	container1 := createBarChart(white, lime, "80", "Youtube", 0, 80)
 
-	container2 := createBarChart(white, green, "120", "Udemy", 50, 120)
+	container2 := createBarChart(white, yellow, "120", "Udemy", 50, 120)
 
-	container3 := createBarChart(white, yellow, "100", "github", 100, 100)
+	container3 := createBarChart(white, orange, "100", "github", 100, 100)
 
-	container4 := createBarChart(white, rightBlue, "50", "github", 150, 50)
+	container4 := createBarChart(white, orangered, "50", "github", 150, 50)
 
 	container5 := createBarChart(white, red, "160", "github", 200, 160)
 
@@ -143,20 +147,37 @@ func chooseColor(colors int) color.Color {
 	switch colors {
 	case 0:
 		// Red
-		return color.NRGBA{R: 0xff, G: 0x33, B: 0x33, A: 0xff}
+		return color.NRGBA{R: 0xff, G: 0x00, B: 0x00, A: 0xff}
 	case 1:
-		// Green
-		return color.NRGBA{R: 0x43, G: 0xff, B: 0x64, A: 0xd9}
+		// orangered
+		return color.NRGBA{R: 0xff, G: 0x45, B: 0x00, A: 0xff}
 	case 2:
-		// Yellow
-		return color.NRGBA{R: 0xf2, G: 0xff, B: 0x00, A: 0xff}
+		// orange
+		return color.NRGBA{R: 0xff, G: 0xa5, B: 0x00, A: 0xff}
 	case 3:
-		// Right Blue
-		return color.NRGBA{R: 0x00, G: 0xbb, B: 0xff, A: 0xff}
+		// yellow
+		return color.NRGBA{R: 0xff, G: 0xff, B: 0x00, A: 0xff}
 	case 4:
+		// lime
+		return color.NRGBA{R: 0x00, G: 0xff, B: 0x00, A: 0xff}
+	case 5:
+		// springgreen
+		return color.NRGBA{R: 0x00, G: 0xff, B: 0x7f, A: 0xff}
+	case 6:
+		// aqua
+		return color.NRGBA{R: 0x00, G: 0xff, B: 0xff, A: 0xff}
+	case 7:
+		// dodgerblue
+		return color.NRGBA{R: 0x1e, G: 0x90, B: 0xff, A: 0xff}
+	case 8:
+		// blue
+		return color.NRGBA{R: 0x00, G: 0x00, B: 0xff, A: 0xff}
+	case 9:
+		// lightsteelblue
+		return color.NRGBA{R: 0x00, G: 0x00, B: 0xff, A: 0xff}
+	default:
 		return color.White
 	}
-	return color.White
 }
 
 // 棒グラフと項目名をコンテナとして作成
