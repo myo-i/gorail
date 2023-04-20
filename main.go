@@ -43,12 +43,10 @@ func main() {
 	data := db.GetData(config)
 
 	// 滞在時間の長かったサイトのタイトルと滞在時間を取得
-	topFiveKey, topFiveValue := db.GetLengthOfStay(data)
-	// fmt.Println(topFiveKey)
-	// fmt.Println(topFiveValue)
+	topTenKey, topTenValue := db.GetLengthOfStay(data)
 
 	// GUI起動
-	user.RunApp(topFiveKey, topFiveValue)
+	user.RunApp(topTenKey, topTenValue)
 }
 
 func getChromeHistoryPath() string {
