@@ -58,11 +58,11 @@ func RunApp(topTenKey []string, topTenValue []int) {
 	rect2.Resize(fyne.NewSize(50, 125))
 
 	window1Month := create1MonthGraph(topTenKey, topTenValue)
-	window1Week := create1WeekGraph()
+	// window1Week := create1WeekGraph()
 
 	tab := container.NewAppTabs(
 		container.NewTabItem("1Month", window1Month),
-		container.NewTabItem("1Week", window1Week),
+		// container.NewTabItem("1Week", window1Week),
 		// container.NewTabItem("1Month", window1Month),
 		// container.NewTabItem("3Month", window3Month),
 	)
@@ -98,29 +98,29 @@ func create1MonthGraph(topTenKey []string, topTenValue []int) fyne.CanvasObject 
 	return window1Month
 }
 
-func create1WeekGraph() fyne.CanvasObject {
+// func create1WeekGraph() fyne.CanvasObject {
 
-	container1 := createBarChart(chooseColor(10), chooseColor(4), "80", "Youtube", 0, 80)
+// 	container1 := createBarChart(chooseColor(10), chooseColor(4), "80", "Youtube", 0, 80)
 
-	container2 := createBarChart(chooseColor(10), chooseColor(3), "120", "Udemy", 50, 120)
+// 	container2 := createBarChart(chooseColor(10), chooseColor(3), "120", "Udemy", 50, 120)
 
-	container3 := createBarChart(chooseColor(10), chooseColor(2), "100", "github", 100, 100)
+// 	container3 := createBarChart(chooseColor(10), chooseColor(2), "100", "github", 100, 100)
 
-	container4 := createBarChart(chooseColor(10), chooseColor(1), "50", "github", 150, 50)
+// 	container4 := createBarChart(chooseColor(10), chooseColor(1), "50", "github", 150, 50)
 
-	container5 := createBarChart(chooseColor(10), chooseColor(0), "160", "github", 200, 160)
+// 	container5 := createBarChart(chooseColor(10), chooseColor(0), "160", "github", 200, 160)
 
-	window1Week := container.NewWithoutLayout(
-		container1,
-		container2,
-		container3,
-		container4,
-		container5,
-	)
+// 	window1Week := container.NewWithoutLayout(
+// 		container1,
+// 		container2,
+// 		container3,
+// 		container4,
+// 		container5,
+// 	)
 
-	return window1Week
+// 	return window1Week
 
-}
+// }
 
 func chooseColor(colors int) color.Color {
 	switch colors {
